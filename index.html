@@ -523,9 +523,12 @@
 			});
 
 			// Smooth scroll for scroll indicator
-			document.querySelector('.scroll-indicator').addEventListener('click', () => {
-				document.querySelector('#erp').scrollIntoView({ behavior: 'smooth' });
-			});
+			const scrollIndicator = document.querySelector('.scroll-indicator');
+			if (scrollIndicator) {
+				scrollIndicator.addEventListener('click', () => {
+					document.querySelector('#erp').scrollIntoView({ behavior: 'smooth' });
+				});
+			}
 
 			// Draw connection lines dynamically
 			const connectionVisual = document.querySelector('.connection-visual');
@@ -538,10 +541,6 @@
 					line.className = 'connection-line';
 					
 					// Calculate positions
-					const centerRect = centerNode.getBoundingClientRect();
-					const nodeRect = node.getBoundingClientRect();
-					const visualRect = connectionVisual.getBoundingClientRect();
-					
 					const centerX = centerNode.offsetLeft + centerNode.offsetWidth / 2;
 					const centerY = centerNode.offsetTop + centerNode.offsetHeight / 2;
 					const nodeX = node.offsetLeft + node.offsetWidth / 2;
