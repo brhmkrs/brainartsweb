@@ -1,59 +1,342 @@
 <!DOCTYPE HTML>
-<!--
-	Eventually by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
 <html>
 	<head>
-		<title>Brainarts</title>
+		<title>Brainarts - AI-Powered Solutions</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<!-- Google Fonts: Poppins -->
-		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 		<style>
-			/* Brainarts başlığı için font ve logo stilleri */
-			h1 {
-				font-family: 'Poppins', sans-serif;
-				font-weight: 600;
-				font-size: 2.5em; /* Bir tık küçülttük (varsayılan genelde 3em civarındadır) */
-				margin-top: 10px; /* Logoyla arasındaki boşluğu azalttık */
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
 			}
-			.logo {
-				display: block;
-				margin: 0 auto; /* Ortada tutar */
-				margin-top: -20px; /* Logoyu biraz yukarı kaydırır */
-				margin-bottom: 10px; /* Logoyla başlık arasındaki boşluğu azaltır */
-				max-width: 150px; /* Logonun boyutunu koruyoruz */
-			}
-		</style>
-	</head>
-	<body class="is-preload">
 
-		<!-- Header -->
+			body {
+				font-family: 'Poppins', sans-serif;
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d0d0d 100%);
+				background-size: 400% 400%;
+				animation: gradientShift 15s ease infinite;
+				color: #ffffff;
+				overflow-x: hidden;
+				position: relative;
+			}
+
+			@keyframes gradientShift {
+				0% { background-position: 0% 50%; }
+				50% { background-position: 100% 50%; }
+				100% { background-position: 0% 50%; }
+			}
+
+			/* Animated Grid Background */
+			.grid-bg {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-image: 
+					linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+					linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+				background-size: 50px 50px;
+				animation: gridMove 20s linear infinite;
+				pointer-events: none;
+				z-index: 1;
+			}
+
+			@keyframes gridMove {
+				0% { transform: translate(0, 0); }
+				100% { transform: translate(50px, 50px); }
+			}
+
+			/* Floating Particles */
+			.particles {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				pointer-events: none;
+				z-index: 2;
+				overflow: hidden;
+			}
+
+			.particle {
+				position: absolute;
+				width: 4px;
+				height: 4px;
+				background: rgba(255, 255, 255, 0.4);
+				border-radius: 50%;
+				animation: floatUp 15s infinite;
+				box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+			}
+
+			.particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s; }
+			.particle:nth-child(2) { left: 20%; animation-delay: 2s; animation-duration: 14s; }
+			.particle:nth-child(3) { left: 30%; animation-delay: 4s; animation-duration: 16s; }
+			.particle:nth-child(4) { left: 40%; animation-delay: 1s; animation-duration: 13s; }
+			.particle:nth-child(5) { left: 50%; animation-delay: 3s; animation-duration: 15s; }
+			.particle:nth-child(6) { left: 60%; animation-delay: 5s; animation-duration: 11s; }
+			.particle:nth-child(7) { left: 70%; animation-delay: 2.5s; animation-duration: 14s; }
+			.particle:nth-child(8) { left: 80%; animation-delay: 4.5s; animation-duration: 12s; }
+			.particle:nth-child(9) { left: 90%; animation-delay: 1.5s; animation-duration: 16s; }
+			.particle:nth-child(10) { left: 15%; animation-delay: 3.5s; animation-duration: 13s; }
+
+			@keyframes floatUp {
+				0% {
+					transform: translateY(100vh) scale(0);
+					opacity: 0;
+				}
+				10% {
+					opacity: 1;
+				}
+				90% {
+					opacity: 1;
+				}
+				100% {
+					transform: translateY(-100vh) scale(1);
+					opacity: 0;
+				}
+			}
+
+			/* Main Content */
+			header {
+				text-align: center;
+				z-index: 10;
+				padding: 2rem;
+			}
+
+			.logo {
+				width: 120px;
+				height: auto;
+				margin-bottom: 1.5rem;
+				filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.3));
+				animation: logoPulse 3s ease-in-out infinite;
+			}
+
+			@keyframes logoPulse {
+				0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.2)); }
+				50% { filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.5)); }
+			}
+
+			h1 {
+				font-size: 3.5rem;
+				font-weight: 700;
+				margin-bottom: 0.5rem;
+				background: linear-gradient(135deg, #ffffff 0%, #888888 50%, #ffffff 100%);
+				background-size: 200% auto;
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+				animation: shimmer 3s linear infinite;
+			}
+
+			@keyframes shimmer {
+				0% { background-position: 0% center; }
+				100% { background-position: 200% center; }
+			}
+
+			.tagline {
+				font-size: 1.2rem;
+				color: #888888;
+				margin-bottom: 2rem;
+				font-weight: 300;
+			}
+
+			.typing-text {
+				font-size: 1.4rem;
+				color: #cccccc;
+				min-height: 2rem;
+				font-weight: 400;
+			}
+
+			.typing-text .cursor {
+				animation: blink 1s infinite;
+				color: #ffffff;
+			}
+
+			@keyframes blink {
+				0%, 50% { opacity: 1; }
+				51%, 100% { opacity: 0; }
+			}
+
+			/* Glass Card */
+			.description {
+				max-width: 600px;
+				margin: 2rem auto;
+				padding: 2rem;
+				background: rgba(255, 255, 255, 0.03);
+				backdrop-filter: blur(10px);
+				border-radius: 20px;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				font-size: 1rem;
+				line-height: 1.8;
+				color: #aaaaaa;
+			}
+
+			/* Footer */
+			footer {
+				z-index: 10;
+				margin-top: 3rem;
+				text-align: center;
+			}
+
+			.social-icons {
+				display: flex;
+				justify-content: center;
+				gap: 1.5rem;
+				margin-bottom: 2rem;
+				list-style: none;
+			}
+
+			.social-icons a {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 50px;
+				height: 50px;
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				border-radius: 50%;
+				color: #888888;
+				font-size: 1.3rem;
+				text-decoration: none;
+				transition: all 0.3s ease;
+			}
+
+			.social-icons a:hover {
+				transform: translateY(-5px);
+				background: rgba(255, 255, 255, 0.1);
+				color: #ffffff;
+				border-color: rgba(255, 255, 255, 0.3);
+				box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+			}
+
+			.copyright {
+				color: #555555;
+				font-size: 0.85rem;
+				list-style: none;
+				display: flex;
+				justify-content: center;
+				gap: 1rem;
+			}
+
+			.copyright a {
+				color: #666666;
+				text-decoration: none;
+				transition: color 0.3s ease;
+			}
+
+			.copyright a:hover {
+				color: #ffffff;
+			}
+
+			/* Responsive */
+			@media (max-width: 768px) {
+				h1 {
+					font-size: 2.5rem;
+				}
+				.typing-text {
+					font-size: 1.1rem;
+				}
+				.description {
+					margin: 1.5rem;
+					padding: 1.5rem;
+				}
+			}
+			</style>
+		</head>
+		<body>
+			<!-- Animated Background -->
+			<div class="grid-bg"></div>
+			<div class="particles">
+				<div class="particle"></div>
+				<div class="particle"></div>
+				<div class="particle"></div>
+				<div class="particle"></div>
+				<div class="particle"></div>
+				<div class="particle"></div>
+				<div class="particle"></div>
+				<div class="particle"></div>
+				<div class="particle"></div>
+				<div class="particle"></div>
+			</div>
+
+			<!-- Header -->
 			<header id="header">
-				<!-- Firma logosu -->
 				<img src="images/logo.png" alt="Brainarts Logo" class="logo" />
 				<h1>Brainarts</h1>
-				<p>Brainarts, yapay zeka destekli akıllı çözümlerle işletmelerin dijital dönüşümünü hızlandıran yenilikçi bir yazılım stüdyosudur. Modern yazılım mimarileri, otonom ajanlar ve veri odaklı altyapılarla sürdürülebilir teknoloji gücü sunar. Finansal teknolojiler ve akıllı fiyatlama motorlarıyla kurumlara stratejik avantaj sağlar.</p>
+				<p class="tagline">Innovating the Future with AI</p>
+				<p class="typing-text">
+					<span id="typed"></span><span class="cursor">|</span>
+				</p>
 			</header>
 
-		<!-- Footer -->
+			<!-- Description Card -->
+			<div class="description">
+				Brainarts, yapay zeka destekli akıllı çözümlerle işletmelerin dijital dönüşümünü hızlandıran yenilikçi bir yazılım stüdyosudur. Modern yazılım mimarileri, otonom ajanlar ve veri odaklı stratejilerle geleceği bugünden inşa ediyoruz.
+			</div>
+
+			<!-- Footer -->
 			<footer id="footer">
-				<ul class="icons">
-					<li><a href="https://x.com/BrainArts_" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-					<li><a href="https://github.com/brhmkrs" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
-					<li><a href="https://www.linkedin.com/company/brainarts/" class="icon brands fa-linkedin"><span class="label">LinkedIn</span></a></li>
-					<li><a href="mailto:brainfo@brainarts.com.tr" class="icon fa-envelope"><span class="label">Email</span></a></li>
+				<ul class="social-icons">
+					<li><a href="https://x.com/BrainArts_" target="_blank"><i class="fab fa-x-twitter"></i></a></li>
+					<li><a href="https://github.com/brhmkrs" target="_blank"><i class="fab fa-github"></i></a></li>
+					<li><a href="https://www.linkedin.com/company/brainarts/" target="_blank"><i class="fab fa-linkedin-in"></i></a></li>
+					<li><a href="mailto:info@brainarts.com.tr"><i class="fas fa-envelope"></i></a></li>
 				</ul>
 				<ul class="copyright">
-					<li>© Brainarts.</li><li>Credits: <a href="http://html5up.net">HTML5 UP</a></li>
+					<li>© 2024 Brainarts</li>
+					<li>Credits: <a href="http://html5up.net">HTML5 UP</a></li>
 				</ul>
 			</footer>
 
-		<!-- Scripts -->
-			<script src="assets/js/main.js"></script>
+			<!-- Typing Effect Script -->
+			<script>
+				const texts = [
+					"AI-Powered Solutions",
+					"Otonom Ajanlar",
+					"Dijital Dönüşüm",
+					"Modern Yazılım Mimarileri",
+					"Veri Odaklı Stratejiler"
+				];
+				let textIndex = 0;
+				let charIndex = 0;
+				let isDeleting = false;
+				const typedElement = document.getElementById('typed');
 
-	</body>
+				function type() {
+					const currentText = texts[textIndex];
+					
+					if (isDeleting) {
+						typedElement.textContent = currentText.substring(0, charIndex - 1);
+						charIndex--;
+					} else {
+						typedElement.textContent = currentText.substring(0, charIndex + 1);
+						charIndex++;
+					}
+
+					let typeSpeed = isDeleting ? 50 : 100;
+
+					if (!isDeleting && charIndex === currentText.length) {
+						typeSpeed = 2000;
+						isDeleting = true;
+					} else if (isDeleting && charIndex === 0) {
+						isDeleting = false;
+						textIndex = (textIndex + 1) % texts.length;
+						typeSpeed = 500;
+					}
+
+					setTimeout(type, typeSpeed);
+				}
+
+				document.addEventListener('DOMContentLoaded', type);
+			</script>
+		</body>
 </html>
