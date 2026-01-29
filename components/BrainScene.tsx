@@ -139,15 +139,11 @@ function BrainParticles() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={particleCount}
-          array={positions}
-          itemSize={3}
+          args={[positions, 3]}
         />
         <bufferAttribute
           attach="attributes-color"
-          count={particleCount}
-          array={colors}
-          itemSize={3}
+          args={[colors, 3]}
         />
       </bufferGeometry>
       <pointsMaterial
@@ -209,9 +205,7 @@ function NeuralConnections() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={connectionCount * 2}
-          array={positions}
-          itemSize={3}
+          args={[positions, 3]}
         />
       </bufferGeometry>
       <lineBasicMaterial
@@ -275,15 +269,11 @@ function ActiveRegions() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={glowCount}
-          array={positions}
-          itemSize={3}
+          args={[positions, 3]}
         />
         <bufferAttribute
           attach="attributes-color"
-          count={glowCount}
-          array={colors}
-          itemSize={3}
+          args={[colors, 3]}
         />
       </bufferGeometry>
       <pointsMaterial

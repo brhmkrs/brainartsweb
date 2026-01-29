@@ -19,7 +19,29 @@ type ModelStyle =
 interface BrainModelProps {
   modelPath: string;
   style: ModelStyle;
+  selectedRegion: string | null;
+  onRegionClick: (region: string | null) => void;
 }
+
+// Parent node -> Region mapping for human_brain.glb
+const PARENT_TO_REGION: Record<string, string> = {
+  "cereb1": "cerebellum",
+  "frontal1": "frontal",
+  "occipit1": "occipital",
+  "pariet1": "parietal",
+  "temp1": "temporal",
+  "brain1": "brainstem",
+};
+
+// Region bilgileri
+const REGION_INFO: Record<string, { name: string; color: string }> = {
+  "cerebellum": { name: "Cerebellum", color: "#ffaa44" },
+  "frontal": { name: "Frontal Lobe", color: "#ff6644" },
+  "occipital": { name: "Occipital Lobe", color: "#44aaff" },
+  "parietal": { name: "Parietal Lobe", color: "#aa44ff" },
+  "temporal": { name: "Temporal Lobe", color: "#44ffaa" },
+  "brainstem": { name: "Brain Stem", color: "#ffff44" },
+};
 
 // Model ölçekleri (her model için ayarlanmış)
 const MODEL_SCALES: Record<string, number> = {
@@ -57,14 +79,28 @@ const fresnelFragmentShader = `
   }
 `;
 
+// Mesh'in hangi bölgeye ait olduğunu bul
+function getMeshRegion(mesh: THREE.Object3D): string | null {
+  let current = mesh.parent;
+  while (current) {
+    if (current.name && PARENT_TO_REGION[current.name]) {
+      return PARENT_TO_REGION[current.name];
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
 // GLB Model yükleyici ve stil dönüştürücü
-function BrainModel({ modelPath, style }: BrainModelProps) {
+function BrainModel({ modelPath, style, selectedRegion, onRegionClick }: BrainModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(modelPath);
   const [particlePositions, setParticlePositions] = useState<Float32Array | null>(null);
   const [edgeGeometries, setEdgeGeometries] = useState<THREE.BufferGeometry[]>([]);
+  const meshRegionMap = useRef<Map<THREE.Mesh, string>>(new Map());
 
   const scale = MODEL_SCALES[modelPath] || 1;
+  const isMercuryMode = style === "glass" || style === "dark-mercury";
 
   // Fresnel material
   const fresnelMaterial = useMemo(() => {
@@ -158,22 +194,44 @@ function BrainModel({ modelPath, style }: BrainModelProps) {
             opacity: 0.15,
             side: THREE.DoubleSide,
           });
-        } else if (style === "glass") {
-          // Liquid Mercury / Sıvı Cıva - gerçek metal yansımaları
-          child.material = new THREE.MeshStandardMaterial({
-            color: "#b8b8b8",
-            metalness: 1.0,
-            roughness: 0.0,
-            envMapIntensity: 1.5,
-          });
-        } else if (style === "dark-mercury") {
-          // Dark Mercury - karanlıkta dönen cıva
-          child.material = new THREE.MeshStandardMaterial({
-            color: "#a0a0a0",
-            metalness: 1.0,
-            roughness: 0.05,
-            envMapIntensity: 0.8,
-          });
+        } else if (style === "glass" || style === "dark-mercury") {
+          // Mercury modları - bölge seçimine göre materyal
+          const meshRegion = getMeshRegion(child);
+          if (meshRegion) {
+            meshRegionMap.current.set(child, meshRegion);
+          }
+
+          const isSelected = selectedRegion && meshRegion === selectedRegion;
+          const isOtherSelected = selectedRegion && meshRegion !== selectedRegion;
+          const isDarkMode = style === "dark-mercury";
+
+          if (isSelected) {
+            // SEÇİLİ - ekstra parlak mercury + hafif beyaz glow
+            child.material = new THREE.MeshStandardMaterial({
+              color: "#f0f0f0",
+              emissive: "#aabbcc",
+              emissiveIntensity: 0.2,
+              metalness: 1.0,
+              roughness: 0.0,
+              envMapIntensity: isDarkMode ? 1.5 : 2.5,
+            });
+          } else if (isOtherSelected) {
+            // Seçili DEĞİL - çok karanlık/neredeyse siyah
+            child.material = new THREE.MeshStandardMaterial({
+              color: "#080808",
+              metalness: 1.0,
+              roughness: 0.4,
+              envMapIntensity: 0.05,
+            });
+          } else {
+            // Hiçbir şey seçili değil - normal parlak mercury
+            child.material = new THREE.MeshStandardMaterial({
+              color: isDarkMode ? "#a0a0a0" : "#b8b8b8",
+              metalness: 1.0,
+              roughness: isDarkMode ? 0.05 : 0.0,
+              envMapIntensity: isDarkMode ? 0.8 : 1.5,
+            });
+          }
         } else if (style === "fresnel") {
           child.material = fresnelMaterial.clone();
         } else if (style === "hybrid") {
@@ -195,7 +253,7 @@ function BrainModel({ modelPath, style }: BrainModelProps) {
         }
       }
     });
-  }, [scene, style, fresnelMaterial]);
+  }, [scene, style, fresnelMaterial, selectedRegion]);
 
   // Rotasyon animasyonu
   useFrame((state) => {
@@ -249,9 +307,7 @@ function BrainModel({ modelPath, style }: BrainModelProps) {
             <bufferGeometry>
               <bufferAttribute
                 attach="attributes-position"
-                count={particlePositions.length / 3}
-                array={particlePositions}
-                itemSize={3}
+                args={[particlePositions, 3]}
               />
             </bufferGeometry>
             <pointsMaterial
@@ -284,9 +340,7 @@ function BrainModel({ modelPath, style }: BrainModelProps) {
             <bufferGeometry>
               <bufferAttribute
                 attach="attributes-position"
-                count={particlePositions.length / 3}
-                array={particlePositions}
-                itemSize={3}
+                args={[particlePositions, 3]}
               />
             </bufferGeometry>
             <pointsMaterial
@@ -303,6 +357,49 @@ function BrainModel({ modelPath, style }: BrainModelProps) {
       </group>
     );
   }
+
+  // Raycaster ile tıklama - useThree kullan
+  const { raycaster, camera, gl } = useThree();
+  const [pointer] = useState(() => new THREE.Vector2());
+
+  // Tıklama işleyicisi
+  useEffect(() => {
+    if (!isMercuryMode) return;
+
+    const handleClick = (event: MouseEvent) => {
+      // Normalize mouse position
+      const rect = gl.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      // Raycast
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length > 0) {
+        const mesh = intersects[0].object as THREE.Mesh;
+        const region = getMeshRegion(mesh);
+
+        if (region) {
+          if (selectedRegion === region) {
+            onRegionClick(null);
+          } else {
+            onRegionClick(region);
+          }
+        }
+      } else {
+        // Boşluğa tıklandı
+        if (selectedRegion) {
+          onRegionClick(null);
+        }
+      }
+    };
+
+    gl.domElement.addEventListener("click", handleClick);
+    return () => {
+      gl.domElement.removeEventListener("click", handleClick);
+    };
+  }, [isMercuryMode, selectedRegion, onRegionClick, raycaster, camera, gl, scene, pointer]);
 
   return (
     <group ref={groupRef} scale={scale}>
@@ -341,6 +438,14 @@ const STYLES: { name: string; value: ModelStyle; description: string }[] = [
 export default function ModelViewer() {
   const [selectedModel, setSelectedModel] = useState(0);
   const [selectedStyle, setSelectedStyle] = useState<ModelStyle>("original");
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+
+  const isMercuryMode = selectedStyle === "glass" || selectedStyle === "dark-mercury";
+
+  // Stil değişince seçili bölgeyi sıfırla
+  useEffect(() => {
+    setSelectedRegion(null);
+  }, [selectedStyle, selectedModel]);
 
   return (
     <div className="w-full h-screen bg-[#020202] flex flex-col">
@@ -405,6 +510,27 @@ export default function ModelViewer() {
         </p>
       </div>
 
+      {/* Seçili bölge göstergesi (Mercury modlarında) */}
+      {isMercuryMode && selectedRegion && (
+        <div className="absolute top-16 right-4 z-10 px-4 py-3 rounded-lg border border-white/30 bg-white/10 backdrop-blur-sm transition-all duration-300">
+          <p className="text-white font-medium">
+            {REGION_INFO[selectedRegion]?.name}
+          </p>
+          <p className="text-white/50 text-xs mt-1">
+            Başka yere tıkla: Seçimi kaldır
+          </p>
+        </div>
+      )}
+
+      {/* Mercury modunda ipucu */}
+      {isMercuryMode && !selectedRegion && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/50 px-4 py-2 rounded-lg">
+          <p className="text-white/60 text-sm">
+            Bir bölgeye tıkla
+          </p>
+        </div>
+      )}
+
       {/* 3D Canvas */}
       <Canvas
         camera={{ position: [0, 0, 8], fov: 45 }}
@@ -438,6 +564,8 @@ export default function ModelViewer() {
             key={`${MODELS[selectedModel].path}-${selectedStyle}`}
             modelPath={MODELS[selectedModel].path}
             style={selectedStyle}
+            selectedRegion={selectedRegion}
+            onRegionClick={setSelectedRegion}
           />
         </Suspense>
 

@@ -1,19 +1,249 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, Suspense, useMemo, createContext, useContext } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, Environment, Center, Text3D, Float } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { Bebas_Neue, Inter } from "next/font/google";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
+// ============ TRANSLATIONS ============
+type Lang = "tr" | "en";
+
+const translations = {
+  tr: {
+    // Header
+    tagline: "Neural Intelligence",
+    nav: {
+      features: "Özellikler",
+      about: "Hakkında",
+      demo: "Demo Talep Et",
+    },
+    // Hero
+    heroTitle: "BRAINARTS",
+    heroSubtitle: "Executional Semantic Graph",
+    heroTagline: "ERP'NİZİ AI-READY HALE GETİRİN",
+    heroDescription: "Mevcut ERP sistemlerinize entegre olan semantik zeka katmanı. AI Agent'ların anlayıp karar verebileceği, yaşayan bir kurumsal hafıza.",
+    scrollHint: "Keşfetmek için kaydırın",
+    // Footer
+    footerTitle: "GELECEĞİ ŞEKİLLENDİRİN",
+    footerSubtitle: "BrainArts ile endüstriyel zekanızı bir üst seviyeye taşıyın.",
+    copyright: "© 2026 BrainArts. Tüm hakları saklıdır.",
+    // Brain Regions
+    regions: {
+      frontal: {
+        name: "Frontal Lob",
+        subtitle: "Aksiyon Merkezi",
+        function: "Dinamik İş Akışı ve Yayılım Motoru",
+        description: "Tek veri değişikliği → otomatik aksiyonlar, onaylar ve uyarılar. Tüm ERP ekosistemi anında tepki verir.",
+        punchline: "Tek bir kıvılcım, tüm organizasyonda doğru aksiyona dönüşür; değişim anında yayılır.",
+      },
+      temporal: {
+        name: "Temporal Lob",
+        subtitle: "Anlam Motoru",
+        function: "Semantik Sorgulama ve Yapay Zeka Katmanı",
+        description: "Doğal dille soru sor, bağlamsal yanıt al. Karmaşık maliyet analizleri artık bir sohbet kadar kolay.",
+        punchline: "Veriler artık sadece rakam değil; şirketinizin ne söylemek istediğini anlayan yaşayan bir lisan.",
+      },
+      parietal: {
+        name: "Parietal Lob",
+        subtitle: "Kontrol Merkezi",
+        function: "3D BOM Navigator ve Graf Motoru",
+        description: "Milyonlarca parça, tek bir görsel harita. Tüm BOM ağacını ve bağımlılıkları anında kavra.",
+        punchline: "Karmaşanın içinde yolunuzu kaybetmeyin; tüm üretim evrenine tek bir noktadan hükmedin.",
+      },
+      occipital: {
+        name: "Oksipital Lob",
+        subtitle: "Analiz Gözü",
+        function: "İleri Düzey Maliyet Analizi ve Görselleştirme",
+        description: "Maliyet katmanları, trendler ve kârlılık projeksiyonları kristal netliğinde görselleşir.",
+        punchline: "Görünmeyeni görün; maliyetin her katmanındaki potansiyeli kristal netliğinde keşfedin.",
+      },
+      cerebellum: {
+        name: "Serebellum",
+        subtitle: "Denge Merkezi",
+        function: "ESG (Executional Semantic Graph) Temel Mimarisi",
+        description: "Üç katmanlı mimari: tüm varlıklar anlamsal olarak bağlı, veri tutarlılığı garantili.",
+        punchline: "Bağlantısız hiçbir veri kalmaz; Brainarts ESG, şirketinizin parçalanmış hafızasını birleştirir.",
+      },
+    },
+    // Features Modal
+    featuresModal: {
+      title: "Özellikler",
+      intro: "Beyin Mimarisi",
+      esgTitle: "Executional Semantic Graph",
+      esgDesc: "Her beyin bölgesi, BrainArts ESG platformunun farklı bir yeteneğini temsil eder. Tıpkı insan beyni gibi, bu bölgeler birbirleriyle sürekli iletişim halinde çalışır.",
+      summaryTitle: "Birleşik Zeka",
+      summaryDesc: "BrainArts ESG, endüstriyel operasyonlarınızı tek bir semantik graf üzerinde birleştirir. Kopuk ERP tabloları yerine, birbirine bağlı ve anlamlı bir kurumsal hafıza oluşturur.",
+      summaryHighlight: "Değişiklikler anında yayılır, kararlar veriye dayanır, karmaşıklık basitliğe dönüşür.",
+    },
+    // About Modal
+    aboutModal: {
+      title: "Hakkında",
+      heroIntro: "Endüstriyel Zekanın Yeni İşletim Sistemi",
+      heroDesc: "BrainArts, karmaşık endüstriyel operasyonları yönetmek ve dönüştürmek için kurgulanmış, dünyanın en gelişmiş Executional Semantic Graph (ESG) platformudur.",
+      whatWeDo: "Geleneksel, statik ve birbirinden kopuk BOM (Ürün Ağacı) sistemlerinin ötesine geçiyoruz. Veriyi sadece saklayan bir depo değil; veriyi anlayan, ilişkilendiren ve otomatik olarak yürüten yaşayan bir graf yapısı inşa ediyoruz.",
+      whyTitle: "Neden BrainArts?",
+      whySubtitle: "Sıradan yazılımlar veri tutar; BrainArts ise veriyi harekete geçirir.",
+      feature1Title: "Executional Semantic Graph",
+      feature1Desc: "Veriler arasındaki anlamsal bağları kurarak, her veri noktasını çalıştırılabilir birer zeka hücresine dönüştürür.",
+      feature2Title: "Formula-Based Propagation",
+      feature2Desc: "Graf üzerindeki tek bir girdi değişikliğinin, tüm sistem boyunca bir sinir sinyali gibi yayılmasını ve sonuçları anlık olarak güncellemesini sağlar.",
+      feature3Title: "Ratio-Only Blind Calculation",
+      feature3Desc: "Hassas verileri korurken, karmaşık maliyet ve oran analizlerini en yüksek güvenlik ve gizlilik standartlarında gerçekleştirir.",
+      feature4Title: "Multi-Tenant Isolation",
+      feature4Desc: "Her kuruma özel, izole ve siber güvenlik odaklı bir mimari sunarak endüstriyel sırlarınızı korur.",
+      visionTitle: "Vizyonumuz: Otonom İş Zekası (ABI)",
+      visionDesc: "Biz, fabrikanızın veya işletmenizin tüm operasyonlarını yöneten bir Industrial Operating System kuruyoruz. Hedefimiz, BOM dünyasını sadece insanların değil, AI Agent'ların da anlayıp yönetebileceği devasa bir ekosisteme dönüştürmek.",
+      visionHighlight: "BrainArts ile işletmeniz artık sadece yönetilmiyor; kendi kararlarını verebilen otonom bir yapıya evriliyor.",
+      contactTitle: "İletişim",
+      contactDesc: "Geleceğin endüstriyel zekasını birlikte inşa edelim.",
+    },
+    // Demo Modal
+    demoModal: {
+      title: "Demo Talep Et",
+      nameLabel: "Ad Soyad *",
+      namePlaceholder: "Adınız Soyadınız",
+      emailLabel: "E-posta *",
+      emailPlaceholder: "ornek@sirket.com",
+      companyLabel: "Şirket",
+      companyPlaceholder: "Şirket Adı",
+      messageLabel: "Mesajınız",
+      messagePlaceholder: "Demo hakkında sorularınız veya özel talepleriniz...",
+      submitButton: "Demo Talep Et",
+      submitting: "Gönderiliyor...",
+      successTitle: "Talebiniz Alındı",
+      successDesc: "En kısa sürede sizinle iletişime geçeceğiz.",
+      closeButton: "Kapat",
+      errorMessage: "Bir hata oluştu. Lütfen tekrar deneyin.",
+    },
+  },
+  en: {
+    // Header
+    tagline: "Neural Intelligence",
+    nav: {
+      features: "Features",
+      about: "About",
+      demo: "Request Demo",
+    },
+    // Hero
+    heroTitle: "BRAINARTS",
+    heroSubtitle: "Executional Semantic Graph",
+    heroTagline: "Make Your ERP AI-Ready",
+    heroDescription: "A semantic intelligence layer that integrates with your existing ERP systems. A living corporate memory that AI Agents can understand and make decisions from.",
+    scrollHint: "Scroll to explore",
+    // Footer
+    footerTitle: "SHAPE THE FUTURE",
+    footerSubtitle: "Elevate your industrial intelligence with BrainArts.",
+    copyright: "© 2026 BrainArts. All rights reserved.",
+    // Brain Regions
+    regions: {
+      frontal: {
+        name: "Frontal Lobe",
+        subtitle: "Action Center",
+        function: "Dynamic Workflow & Propagation Engine",
+        description: "One data change → automatic actions, approvals, and alerts. The entire ERP ecosystem responds instantly.",
+        punchline: "A single spark transforms into the right action across your organization; change propagates instantly.",
+      },
+      temporal: {
+        name: "Temporal Lobe",
+        subtitle: "Meaning Engine",
+        function: "Semantic Query & AI Layer",
+        description: "Ask questions in natural language, get contextual answers. Complex cost analysis is now as easy as a conversation.",
+        punchline: "Data is no longer just numbers; it's a living language that understands what your company wants to say.",
+      },
+      parietal: {
+        name: "Parietal Lobe",
+        subtitle: "Control Center",
+        function: "3D BOM Navigator & Graph Engine",
+        description: "Millions of parts, one visual map. Instantly grasp the entire BOM tree and dependencies.",
+        punchline: "Don't lose your way in complexity; command your entire production universe from a single point.",
+      },
+      occipital: {
+        name: "Occipital Lobe",
+        subtitle: "Analysis Eye",
+        function: "Advanced Cost Analysis & Visualization",
+        description: "Cost layers, trends, and profitability projections visualized with crystal clarity.",
+        punchline: "See the invisible; discover the potential in every layer of cost with crystal clarity.",
+      },
+      cerebellum: {
+        name: "Cerebellum",
+        subtitle: "Balance Center",
+        function: "ESG (Executional Semantic Graph) Core Architecture",
+        description: "Three-layer architecture: all entities semantically connected, data consistency guaranteed.",
+        punchline: "No data left unconnected; Brainarts ESG unifies your company's fragmented memory.",
+      },
+    },
+    // Features Modal
+    featuresModal: {
+      title: "Features",
+      intro: "Brain Architecture",
+      esgTitle: "Executional Semantic Graph",
+      esgDesc: "Each brain region represents a different capability of the BrainArts ESG platform. Just like the human brain, these regions work in constant communication with each other.",
+      summaryTitle: "Unified Intelligence",
+      summaryDesc: "BrainArts ESG unifies your industrial operations on a single semantic graph. Instead of disconnected ERP tables, it creates an interconnected and meaningful corporate memory.",
+      summaryHighlight: "Changes propagate instantly, decisions are data-driven, complexity transforms into simplicity.",
+    },
+    // About Modal
+    aboutModal: {
+      title: "About",
+      heroIntro: "The New Operating System for Industrial Intelligence",
+      heroDesc: "BrainArts is the world's most advanced Executional Semantic Graph (ESG) platform, designed to manage and transform complex industrial operations.",
+      whatWeDo: "We go beyond traditional, static, and disconnected BOM (Bill of Materials) systems. We're building not just a repository that stores data, but a living graph structure that understands, connects, and automatically executes data.",
+      whyTitle: "Why BrainArts?",
+      whySubtitle: "Ordinary software stores data; BrainArts puts data into action.",
+      feature1Title: "Executional Semantic Graph",
+      feature1Desc: "By establishing semantic connections between data, it transforms every data point into an executable intelligence cell.",
+      feature2Title: "Formula-Based Propagation",
+      feature2Desc: "Enables a single input change on the graph to propagate like a nerve signal throughout the system and update results instantly.",
+      feature3Title: "Ratio-Only Blind Calculation",
+      feature3Desc: "Performs complex cost and ratio analyses at the highest security and privacy standards while protecting sensitive data.",
+      feature4Title: "Multi-Tenant Isolation",
+      feature4Desc: "Protects your industrial secrets by providing a customized, isolated, and cybersecurity-focused architecture for each organization.",
+      visionTitle: "Our Vision: Autonomous Business Intelligence (ABI)",
+      visionDesc: "We're building an Industrial Operating System that manages all operations of your factory or business. Our goal is to transform the BOM world into a massive ecosystem that not only humans but also AI Agents can understand and manage.",
+      visionHighlight: "With BrainArts, your business is no longer just managed; it evolves into an autonomous structure that can make its own decisions.",
+      contactTitle: "Contact",
+      contactDesc: "Let's build the industrial intelligence of the future together.",
+    },
+    // Demo Modal
+    demoModal: {
+      title: "Request Demo",
+      nameLabel: "Full Name *",
+      namePlaceholder: "Your Full Name",
+      emailLabel: "Email *",
+      emailPlaceholder: "example@company.com",
+      companyLabel: "Company",
+      companyPlaceholder: "Company Name",
+      messageLabel: "Your Message",
+      messagePlaceholder: "Questions about the demo or special requests...",
+      submitButton: "Request Demo",
+      submitting: "Sending...",
+      successTitle: "Request Received",
+      successDesc: "We will contact you as soon as possible.",
+      closeButton: "Close",
+      errorMessage: "An error occurred. Please try again.",
+    },
+  },
+};
+
+// Language Context
+const LangContext = createContext<{
+  lang: Lang;
+  setLang: (lang: Lang) => void;
+  t: typeof translations.tr;
+}>({
+  lang: "tr",
+  setLang: () => {},
+  t: translations.tr,
+});
+
+const useLang = () => useContext(LangContext);
 
 // Fonts
 const bebasNeue = Bebas_Neue({
   weight: "400",
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-bebas"
 });
 
@@ -22,269 +252,302 @@ const inter = Inter({
   variable: "--font-inter"
 });
 
-// Config - DENEME B: Neural Networks modeli
-const BRAIN_MODEL = "/neural_networks_of_the_brain.glb";
-const MODEL_SCALE = 0.001;  // Neural networks modeli çok büyük, çok küçült
+// Config
+const BRAIN_MODEL = "/human_brain.glb";
+const MODEL_SCALE = 0.02;
 
-// Brain regions - camera ORBITS around brain
-// Model rotated -90deg X: front of brain faces camera at default position
-// More dramatic camera angles for each region
+// Parent node -> Region mapping
+const PARENT_TO_REGION: Record<string, string> = {
+  "cereb1": "cerebellum",
+  "frontal1": "frontal",
+  "occipit1": "occipital",
+  "pariet1": "parietal",
+  "temp1": "temporal",
+  "brain1": "brainstem",
+};
+
+// Brain regions - Camera positions only (texts come from translations)
 const BRAIN_REGIONS = {
-  temporal: {
-    name: "Temporal Lob",
-    subtitle: "Hafıza Katmanı",
-    description: "Hafıza, dil anlama ve duygu işleme merkezi. Ses ve görsel hafıza burada depolanır.",
-    cameraTarget: { x: 0, y: 0, z: 0 },
-    cameraOffset: { x: 15, y: 0, z: 12 },
-  },
   frontal: {
-    name: "Frontal Lob",
-    subtitle: "Karar Merkezi",
-    description: "Karar verme, planlama ve problem çözme. Kişiliğinizin merkezi.",
-    cameraTarget: { x: 0, y: 0, z: 0 },
-    cameraOffset: { x: 5, y: 2, z: 18 },
+    cameraOffset: { x: 5.2, y: 3, z: 4.5 },
+  },
+  temporal: {
+    cameraOffset: { x: 7, y: 0, z: 2 },
   },
   parietal: {
-    name: "Parietal Lob",
-    subtitle: "Analiz Motoru",
-    description: "Mekansal algı ve koordinasyon. Dokunma duyusu burada işlenir.",
-    cameraTarget: { x: 0, y: 0, z: 0 },
-    cameraOffset: { x: 3, y: 15, z: 10 },
+    cameraOffset: { x: -3, y: 2, z: 6 },
   },
   occipital: {
-    name: "Oksipital Lob",
-    subtitle: "Görsel İşlemci",
-    description: "Görsel işleme merkezi. Gördüklerinizi anlamlandırır.",
-    cameraTarget: { x: 0, y: 0, z: 0 },
-    cameraOffset: { x: 0, y: 5, z: -15 },
+    cameraOffset: { x: -5.3, y: 0, z: 5.3 },
   },
   cerebellum: {
-    name: "Serebellum",
-    subtitle: "Koordinatör",
-    description: "Denge ve motor kontrol. Hareketlerinizin hassas koordinasyonu.",
-    cameraTarget: { x: 0, y: 0, z: 0 },
-    cameraOffset: { x: 0, y: 8, z: -12 },
+    cameraOffset: { x: -2, y: -3, z: -8 },
   },
 };
 
 type RegionKey = keyof typeof BRAIN_REGIONS;
 const REGION_KEYS = Object.keys(BRAIN_REGIONS) as RegionKey[];
 
-// Camera positions - neural network model için daha uzak
-const CAMERA_POSITIONS = {
-  initial: { x: 0, y: 0, z: 25 },  // Çok uzak
-  hero: { x: 0, y: 0, z: 20 },     // Uzak
-};
+// Get mesh region
+function getMeshRegion(mesh: THREE.Object3D): string | null {
+  let current = mesh.parent;
+  while (current) {
+    if (current.name && PARENT_TO_REGION[current.name]) {
+      return PARENT_TO_REGION[current.name];
+    }
+    current = current.parent;
+  }
+  return null;
+}
 
-// Camera Controller Component
+// Mercury Material - shared
+function useMercuryMaterial(isSelected: boolean, isOther: boolean) {
+  return useMemo(() => {
+    if (isSelected) {
+      // Selected: bright mercury with subtle cool emissive
+      return new THREE.MeshStandardMaterial({
+        color: "#d8d8d8",
+        emissive: "#334455",
+        emissiveIntensity: 0.15,
+        metalness: 1.0,
+        roughness: 0.0,
+        envMapIntensity: 2.2,
+      });
+    } else if (isOther) {
+      // Others: much darker for contrast
+      return new THREE.MeshStandardMaterial({
+        color: "#040404",
+        metalness: 1.0,
+        roughness: 0.5,
+        envMapIntensity: 0.02,
+      });
+    } else {
+      return new THREE.MeshStandardMaterial({
+        color: "#b8b8b8",
+        metalness: 1.0,
+        roughness: 0.0,
+        envMapIntensity: 1.5,
+      });
+    }
+  }, [isSelected, isOther]);
+}
+
+// 3D Metallic Text Component
+function MetallicText3D({
+  text,
+  position,
+  size = 0.5,
+  opacity = 1
+}: {
+  text: string;
+  position: [number, number, number];
+  size?: number;
+  opacity?: number;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  // Subtle float animation
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.05;
+    }
+  });
+
+  return (
+    <Center position={position}>
+      <Text3D
+        ref={meshRef}
+        font="/fonts/bebas_neue_regular.json"
+        size={size}
+        height={0.1}
+        bevelEnabled
+        bevelThickness={0.02}
+        bevelSize={0.01}
+        bevelSegments={5}
+      >
+        {text}
+        <meshStandardMaterial
+          color="#c0c0c0"
+          metalness={1}
+          roughness={0.05}
+          envMapIntensity={2}
+          transparent
+          opacity={opacity}
+        />
+      </Text3D>
+    </Center>
+  );
+}
+
+// Camera Controller - cinematic smooth transitions
 function CameraController({
   selectedRegion,
-  scrollProgress,
   mousePosition
 }: {
   selectedRegion: RegionKey | null;
-  scrollProgress: number;
   mousePosition: { x: number; y: number };
 }) {
   const { camera } = useThree();
-  const targetRef = useRef({ x: 0, y: 0, z: 12 });
-  const lookAtRef = useRef({ x: 0, y: 0, z: 0 });
+  const currentPos = useRef({ x: 0, y: 0, z: 8 });
+  const velocity = useRef({ x: 0, y: 0, z: 0 });
 
   useFrame(() => {
-    let targetPos = { ...CAMERA_POSITIONS.initial };
-    let lookAt = { x: 0, y: 0, z: 0 };
+    // Determine target position
+    let targetPos = { x: 0, y: 0, z: 8 };
 
     if (selectedRegion) {
-      // Region selected - zoom in and offset toward region
       const regionData = BRAIN_REGIONS[selectedRegion];
-      targetPos = {
-        x: regionData.cameraOffset.x,
-        y: regionData.cameraOffset.y,
-        z: regionData.cameraOffset.z,
-      };
-      lookAt = {
-        x: regionData.cameraTarget.x,
-        y: regionData.cameraTarget.y,
-        z: regionData.cameraTarget.z,
-      };
-    } else if (scrollProgress > 0.05) {
-      // Scrolling but no region - intermediate zoom
-      targetPos = CAMERA_POSITIONS.hero;
+      targetPos = { ...regionData.cameraOffset };
     }
 
-    // Add subtle mouse influence
-    const mouseInfluence = selectedRegion ? 0.3 : 0.5;
-    targetPos.x += mousePosition.x * mouseInfluence;
-    targetPos.y -= mousePosition.y * mouseInfluence * 0.5;
+    // Mouse influence only when no region selected
+    if (!selectedRegion) {
+      targetPos.x += mousePosition.x * 0.3;
+      targetPos.y -= mousePosition.y * 0.2;
+    }
 
-    // Smooth interpolation - daha yavaş, sinematik geçişler
-    const posSpeed = 0.018;  // Daha yavaş kamera hareketi
-    const lookSpeed = 0.022; // Daha yavaş bakış geçişi
+    // Cinematic spring physics
+    const stiffness = 0.025;  // How fast it moves toward target
+    const damping = 0.88;     // How much it slows down
 
-    targetRef.current.x += (targetPos.x - targetRef.current.x) * posSpeed;
-    targetRef.current.y += (targetPos.y - targetRef.current.y) * posSpeed;
-    targetRef.current.z += (targetPos.z - targetRef.current.z) * posSpeed;
+    // Calculate spring force
+    const forceX = (targetPos.x - currentPos.current.x) * stiffness;
+    const forceY = (targetPos.y - currentPos.current.y) * stiffness;
+    const forceZ = (targetPos.z - currentPos.current.z) * stiffness;
 
-    lookAtRef.current.x += (lookAt.x - lookAtRef.current.x) * lookSpeed;
-    lookAtRef.current.y += (lookAt.y - lookAtRef.current.y) * lookSpeed;
-    lookAtRef.current.z += (lookAt.z - lookAtRef.current.z) * lookSpeed;
+    // Apply force to velocity
+    velocity.current.x += forceX;
+    velocity.current.y += forceY;
+    velocity.current.z += forceZ;
 
-    camera.position.set(targetRef.current.x, targetRef.current.y, targetRef.current.z);
-    camera.lookAt(lookAtRef.current.x, lookAtRef.current.y, lookAtRef.current.z);
+    // Apply damping
+    velocity.current.x *= damping;
+    velocity.current.y *= damping;
+    velocity.current.z *= damping;
+
+    // Update position
+    currentPos.current.x += velocity.current.x;
+    currentPos.current.y += velocity.current.y;
+    currentPos.current.z += velocity.current.z;
+
+    // Minimum distance from center
+    const minRadius = 6.5;
+    const currentRadius = Math.sqrt(
+      currentPos.current.x ** 2 +
+      currentPos.current.y ** 2 +
+      currentPos.current.z ** 2
+    );
+    if (currentRadius < minRadius) {
+      const scale = minRadius / currentRadius;
+      currentPos.current.x *= scale;
+      currentPos.current.y *= scale;
+      currentPos.current.z *= scale;
+    }
+
+    camera.position.set(currentPos.current.x, currentPos.current.y, currentPos.current.z);
+    camera.lookAt(0, 0, 0);
   });
 
   return null;
 }
 
-// 3D Brain Component
-// DENEME A: Wireframe-only hologram tarzı
-function BrainModel({
+// Mercury Brain
+function MercuryBrain({
   selectedRegion,
-  mousePosition
+  onRegionClick,
 }: {
   selectedRegion: RegionKey | null;
-  mousePosition: { x: number; y: number };
+  onRegionClick: (region: RegionKey | null) => void;
 }) {
-  const { scene: gltfScene } = useGLTF(BRAIN_MODEL);
-
-  const wireframesRef = useRef<Record<string, THREE.LineSegments[]>>({});
-  const isInitialized = useRef(false);
   const groupRef = useRef<THREE.Group>(null);
+  const { scene } = useGLTF(BRAIN_MODEL);
+  const { raycaster, camera, gl } = useThree();
+  const pointer = useMemo(() => new THREE.Vector2(), []);
 
-  const selectedRegionRef = useRef(selectedRegion);
-  selectedRegionRef.current = selectedRegion;
-
-  // Brain rotation based on mouse - only Y axis (horizontal)
-  useFrame(() => {
-    if (groupRef.current) {
-      const intensity = selectedRegion ? 0.15 : 0.4;
-      const targetY = mousePosition.x * intensity;
-      groupRef.current.rotation.y += (targetY - groupRef.current.rotation.y) * 0.05;
-      groupRef.current.rotation.x = 0;
+  useFrame((state) => {
+    if (groupRef.current && !selectedRegion) {
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.2;
     }
   });
 
-  // WIREFRAME-ONLY: Sadece çizgiler, partikül yok
   useEffect(() => {
-    if (isInitialized.current || !groupRef.current) return;
-    isInitialized.current = true;
+    scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const meshRegion = getMeshRegion(child);
+        const isSelected = selectedRegion && meshRegion === selectedRegion;
+        const isOtherSelected = selectedRegion && meshRegion !== selectedRegion;
 
-    // Neural Networks modeli için mapping (left/right/center → beyin bölgeleri)
-    const parentToRegion: Record<string, string> = {
-      "left_08 - Default_0 Front": "temporal",
-      "right_08 - Default_0 Front": "frontal",
-      "centr_08 - Default_0": "parietal",
-      "left_08 - Default_0.001": "occipital",
-      "right_08 - Default_0.001": "cerebellum",
-      "right_08 - Default_0 Back": "temporal",
-      "left_08 - Default_0 Back": "frontal",
-    };
-
-    const wireframes: Record<string, THREE.LineSegments[]> = {};
-
-    gltfScene.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.geometry) {
-        const parentName = child.parent?.name || "";
-        const region = parentToRegion[parentName] || "default";
-
-        // Serebellum için EdgesGeometry (daha seyrek), diğerleri için WireframeGeometry
-        const lineGeometry = region === "cerebellum"
-          ? new THREE.EdgesGeometry(child.geometry, 35) // Sadece keskin kenarlar (threshold artırıldı)
-          : new THREE.WireframeGeometry(child.geometry); // Tüm üçgenler
-
-        const wireframeMaterial = new THREE.LineBasicMaterial({
-          color: region === "default" ? 0x334455 : 0x556677,
-          transparent: true,
-          opacity: region === "default" ? 0.15 : (region === "cerebellum" ? 0.35 : 0.25),
-        });
-
-        const wireframe = new THREE.LineSegments(lineGeometry, wireframeMaterial);
-        wireframe.rotation.x = -Math.PI / 2;
-        wireframe.scale.set(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
-
-        groupRef.current!.add(wireframe);
-
-        // Her bölge için TÜM wireframe'leri sakla
-        if (!wireframes[region]) {
-          wireframes[region] = [];
+        if (isSelected) {
+          // Selected: bright mercury with subtle cool emissive
+          child.material = new THREE.MeshStandardMaterial({
+            color: "#d8d8d8",
+            emissive: "#334455",
+            emissiveIntensity: 0.15,
+            metalness: 1.0,
+            roughness: 0.0,
+            envMapIntensity: 2.2,
+          });
+        } else if (isOtherSelected) {
+          // Others: much darker for contrast
+          child.material = new THREE.MeshStandardMaterial({
+            color: "#040404",
+            metalness: 1.0,
+            roughness: 0.5,
+            envMapIntensity: 0.02,
+          });
+        } else {
+          child.material = new THREE.MeshStandardMaterial({
+            color: "#b8b8b8",
+            metalness: 1.0,
+            roughness: 0.0,
+            envMapIntensity: 1.5,
+          });
         }
-        wireframes[region].push(wireframe);
       }
     });
+  }, [scene, selectedRegion]);
 
-    wireframesRef.current = wireframes;
-    // Log mesh counts per region
-    Object.entries(wireframes).forEach(([region, wfs]) => {
-      console.log(`🔷 ${region}: ${wfs.length} mesh(es)`);
-    });
+  useEffect(() => {
+    const handleClick = (event: MouseEvent) => {
+      const rect = gl.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    return () => {
-      Object.values(wireframesRef.current).forEach(wfArray => {
-        wfArray.forEach(wf => {
-          if (groupRef.current) groupRef.current.remove(wf);
-          wf.geometry.dispose();
-          (wf.material as THREE.Material).dispose();
-        });
-      });
-    };
-  }, [gltfScene]);
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
 
-  // WIREFRAME animasyonu - tüm mesh'ler için
-  useFrame((state) => {
-    const current = selectedRegionRef.current;
-    const time = state.clock.elapsedTime;
+      if (intersects.length > 0) {
+        const mesh = intersects[0].object as THREE.Mesh;
+        const region = getMeshRegion(mesh) as RegionKey | null;
 
-    Object.entries(wireframesRef.current).forEach(([region, wireframeArray]) => {
-      wireframeArray.forEach(wireframe => {
-        const material = wireframe.material as THREE.LineBasicMaterial;
-
-        if (current) {
-          if (region === current) {
-            // Seçili bölge - parlak gümüş, pulse efekti
-            const targetOpacity = 0.5 + 0.25 * Math.sin(time * 3);
-            material.opacity += (targetOpacity - material.opacity) * 0.08;
-            material.color.setRGB(
-              0.7 + 0.3 * Math.sin(time * 2),
-              0.75 + 0.25 * Math.sin(time * 2),
-              0.9 + 0.1 * Math.sin(time * 2.5)
-            );
-          } else if (region === "default") {
-            // Default bölge çok silik
-            material.opacity += (0.03 - material.opacity) * 0.05;
-            material.color.setRGB(0.2, 0.2, 0.25);
-          } else {
-            // Diğer bölgeler - silik
-            material.opacity += (0.06 - material.opacity) * 0.05;
-            material.color.setRGB(0.2, 0.2, 0.25);
-          }
-        } else {
-          // Hiçbir şey seçili değil - nefes efekti
-          const breathe = 0.2 + 0.1 * Math.sin(time * 1.2);
-          if (region === "default") {
-            material.opacity += (breathe * 0.5 - material.opacity) * 0.03;
-          } else {
-            material.opacity += (breathe - material.opacity) * 0.03;
-          }
-          material.color.setRGB(0.4, 0.42, 0.5);
+        if (region && BRAIN_REGIONS[region]) {
+          onRegionClick(selectedRegion === region ? null : region);
         }
-      });
-    });
-  });
+      }
+    };
 
-  return <group ref={groupRef} />;
+    gl.domElement.addEventListener("click", handleClick);
+    return () => gl.domElement.removeEventListener("click", handleClick);
+  }, [selectedRegion, onRegionClick, raycaster, camera, gl, scene, pointer]);
+
+  return (
+    <group ref={groupRef} scale={MODEL_SCALE}>
+      <Center>
+        <primitive object={scene} />
+      </Center>
+    </group>
+  );
 }
 
-// Progress indicator dots
+// Progress Dots
 function ProgressDots({ activeIndex, total }: { activeIndex: number; total: number }) {
   return (
-    <div className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2 md:gap-3">
+    <div className="fixed right-8 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3">
       {Array.from({ length: total + 1 }).map((_, i) => (
         <div
           key={i}
-          className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full transition-all duration-500 ${
-            i === activeIndex
-              ? 'bg-white scale-150'
-              : 'bg-white/15 hover:bg-white/30'
+          className={`w-2 h-2 rounded-full transition-all duration-500 ${
+            i === activeIndex ? "bg-white scale-125" : "bg-white/20"
           }`}
         />
       ))}
@@ -292,357 +555,498 @@ function ProgressDots({ activeIndex, total }: { activeIndex: number; total: numb
   );
 }
 
-// Neural network style connection from brain to info card
-function NeuralConnection({
-  selectedRegion,
-  cardRef
+// Modal Component
+type ModalType = "features" | "about" | "demo" | null;
+
+function Modal({
+  isOpen,
+  onClose,
+  children,
+  title
 }: {
-  selectedRegion: RegionKey | null;
-  cardRef: React.RefObject<HTMLDivElement | null>;
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title: string;
 }) {
-  const [paths, setPaths] = useState<string[]>([]);
-  const [nodes, setNodes] = useState<{ x: number; y: number }[]>([]);
-
-  useEffect(() => {
-    if (!selectedRegion || !cardRef.current) {
-      setPaths([]);
-      setNodes([]);
-      return;
-    }
-
-    const updatePaths = () => {
-      const card = cardRef.current;
-      if (!card) return;
-
-      const cardRect = card.getBoundingClientRect();
-      const startX = cardRect.right + 15;
-      const startY = cardRect.top + cardRect.height / 2;
-
-      const endX = window.innerWidth * 0.52;
-      const endY = window.innerHeight * 0.5;
-
-      // Nöron ağı noktaları - rastgele ara noktalar
-      const midPoints: { x: number; y: number }[] = [];
-      const numMidPoints = 4;
-
-      for (let i = 0; i < numMidPoints; i++) {
-        const t = (i + 1) / (numMidPoints + 1);
-        const baseX = startX + (endX - startX) * t;
-        const baseY = startY + (endY - startY) * t;
-        // Rastgele sapma
-        const offsetX = (Math.random() - 0.5) * 60;
-        const offsetY = (Math.random() - 0.5) * 80;
-        midPoints.push({ x: baseX + offsetX, y: baseY + offsetY });
-      }
-
-      // Ana yol + dallar
-      const allPaths: string[] = [];
-      const allNodes: { x: number; y: number }[] = [{ x: startX, y: startY }];
-
-      // Ana sinir yolu
-      let mainPath = `M ${startX} ${startY}`;
-      midPoints.forEach((p, i) => {
-        mainPath += ` L ${p.x} ${p.y}`;
-        allNodes.push(p);
-      });
-      mainPath += ` L ${endX} ${endY}`;
-      allNodes.push({ x: endX, y: endY });
-      allPaths.push(mainPath);
-
-      // Dallanmalar (2-3 tane)
-      midPoints.forEach((p, i) => {
-        if (i % 2 === 0) {
-          const branchEndX = p.x + (Math.random() - 0.5) * 100;
-          const branchEndY = p.y + (Math.random() - 0.5) * 60;
-          allPaths.push(`M ${p.x} ${p.y} L ${branchEndX} ${branchEndY}`);
-          allNodes.push({ x: branchEndX, y: branchEndY });
-        }
-      });
-
-      setPaths(allPaths);
-      setNodes(allNodes);
-    };
-
-    updatePaths();
-    // Sadece scroll'da güncelle, her frame'de değil
-    const handleScroll = () => updatePaths();
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('resize', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-    };
-  }, [selectedRegion, cardRef]);
-
-  if (paths.length === 0 || !selectedRegion) return null;
-
-  return (
-    <svg
-      className="fixed inset-0 z-15 pointer-events-none"
-      style={{ width: '100vw', height: '100vh' }}
-    >
-      <defs>
-        <linearGradient id="neural-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(148, 163, 184, 0.5)" />
-          <stop offset="100%" stopColor="rgba(148, 163, 184, 0.1)" />
-        </linearGradient>
-      </defs>
-
-      {/* Nöron yolları */}
-      {paths.map((path, i) => (
-        <path
-          key={i}
-          d={path}
-          stroke="url(#neural-gradient)"
-          strokeWidth={i === 0 ? "1" : "0.5"}
-          fill="none"
-          opacity={i === 0 ? 0.6 : 0.3}
-        />
-      ))}
-
-      {/* Sinaps noktaları */}
-      {nodes.map((node, i) => (
-        <circle
-          key={i}
-          cx={node.x}
-          cy={node.y}
-          r={i === 0 || i === nodes.length - 1 ? 3 : 2}
-          fill="rgba(148, 163, 184, 0.5)"
-        />
-      ))}
-    </svg>
-  );
-}
-
-// Main Page Component
-export default function Home() {
-  const [selectedRegion, setSelectedRegion] = useState<RegionKey | null>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const sectionsRef = useRef<HTMLDivElement[]>([]);
-  const activeCardRef = useRef<HTMLDivElement>(null);
-
-  // Mouse tracking for parallax
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    const x = (e.clientX / window.innerWidth - 0.5) * 2;
-    const y = (e.clientY / window.innerHeight - 0.5) * 2;
-    setMousePosition({ x, y });
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [handleMouseMove]);
-
-  // Scroll progress tracking
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(docHeight > 0 ? scrollY / docHeight : 0);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Scroll triggers
-  useEffect(() => {
-    // Hero section - no region selected
-    ScrollTrigger.create({
-      trigger: sectionsRef.current[0],
-      start: "top top",
-      end: "bottom center",
-      onEnter: () => { setSelectedRegion(null); setActiveIndex(0); },
-      onEnterBack: () => { setSelectedRegion(null); setActiveIndex(0); },
-    });
-
-    // Region sections
-    REGION_KEYS.forEach((region, index) => {
-      ScrollTrigger.create({
-        trigger: sectionsRef.current[index + 1],
-        start: "top center",
-        end: "bottom center",
-        onEnter: () => { setSelectedRegion(region); setActiveIndex(index + 1); },
-        onEnterBack: () => { setSelectedRegion(region); setActiveIndex(index + 1); },
-      });
-    });
-
-    return () => {
-      ScrollTrigger.getAll().forEach(t => t.kill());
-    };
-  }, []);
-
-  // Intersection Observer for reveal animations
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('revealed');
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    );
-
-    document.querySelectorAll('.reveal-on-scroll').forEach((el) => {
-      observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  if (!isOpen) return null;
 
   return (
     <div
-      ref={containerRef}
-      className={`${inter.variable} ${bebasNeue.variable} relative bg-black`}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8"
+      onClick={onClose}
     >
-      {/* Fixed Brain Background */}
-      <div className="fixed inset-0 z-0">
-        {/* Ambient glow behind brain */}
-        <div
-          className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
-          style={{
-            background: selectedRegion
-              ? 'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.05) 40%, transparent 70%)'
-              : 'radial-gradient(ellipse 60% 60% at 50% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 60%)',
-          }}
-        />
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-        <Canvas
-          camera={{ position: [0, 0, 12], fov: 45 }}
-          gl={{ antialias: true, alpha: true }}
+      {/* Modal Content */}
+      <div
+        className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
         >
-          <color attach="background" args={["#030508"]} />
-          <ambientLight intensity={0.5} />
-          <BrainModel selectedRegion={selectedRegion} mousePosition={mousePosition} />
-          <CameraController
-            selectedRegion={selectedRegion}
-            scrollProgress={scrollProgress}
-            mousePosition={mousePosition}
-          />
+          <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Header */}
+        <div className="px-10 py-8 border-b border-white/5">
+          <h2 className="font-bebas text-3xl md:text-4xl tracking-wide metallic-text-title-animated">
+            {title}
+          </h2>
+        </div>
+
+        {/* Body */}
+        <div className="px-10 py-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Features Modal Content
+function FeaturesContent({ t }: { t: typeof translations.tr }) {
+  const regionKeys: RegionKey[] = ["frontal", "temporal", "parietal", "occipital", "cerebellum"];
+
+  return (
+    <div className="space-y-10">
+      {/* Intro */}
+      <div>
+        <p className="text-xs tracking-[0.3em] uppercase text-white/30 mb-3">{t.featuresModal.intro}</p>
+        <h3 className="font-bebas text-3xl md:text-4xl metallic-text-title-animated mb-4">
+          <span className="executional-shimmer">Executional</span> Semantic Graph
+        </h3>
+        <p className="text-white/50 leading-relaxed text-base">
+          {t.featuresModal.esgDesc}
+        </p>
+      </div>
+
+      {/* Features Grid */}
+      <div className="space-y-8">
+        {regionKeys.map((key, i) => {
+          const region = t.regions[key];
+          return (
+            <div key={i} className="flex gap-6 items-start group">
+              <div className="relative">
+                <span className="font-bebas text-6xl md:text-7xl metallic-number-animated">0{i + 1}</span>
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 metallic-line-animated rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              </div>
+              <div className="flex-1 pt-2">
+                <div className="flex items-center gap-4 mb-3">
+                  <h3 className="font-bebas text-2xl md:text-3xl metallic-text">{region.name}</h3>
+                  <span className="text-[10px] tracking-[0.2em] uppercase text-white/30 px-2 py-1 bg-white/5 rounded">{region.subtitle}</span>
+                </div>
+                <p className="text-base metallic-bold mb-2">{region.function}</p>
+                <p className="text-sm text-white/45 leading-relaxed">{region.description}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Summary */}
+      <div className="pt-8 border-t border-white/10">
+        <h3 className="font-bebas text-2xl metallic-text-title-animated mb-4">{t.featuresModal.summaryTitle}</h3>
+        <p className="text-white/50 leading-relaxed text-base">
+          {t.featuresModal.summaryDesc}
+          <span className="text-white/70"> {t.featuresModal.summaryHighlight}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// About Modal Content
+function AboutContent({ t }: { t: typeof translations.tr }) {
+  return (
+    <div className="space-y-10">
+      {/* Hero Section */}
+      <div>
+        <p className="text-xs tracking-[0.3em] uppercase text-white/30 mb-3">{t.aboutModal.heroIntro}</p>
+        <h3 className="font-bebas text-3xl md:text-4xl metallic-text-title-animated mb-6">BrainArts</h3>
+        <p className="text-white/60 leading-relaxed text-base">
+          {t.aboutModal.heroDesc.split("Executional")[0]}
+          <span className="executional-shimmer">Executional</span>
+          {t.aboutModal.heroDesc.split("Executional")[1]}
+        </p>
+      </div>
+
+      {/* What We Do */}
+      <div>
+        <p className="text-white/50 leading-relaxed text-base mb-4">
+          {t.aboutModal.whatWeDo}
+        </p>
+      </div>
+
+      {/* Why BrainArts */}
+      <div>
+        <h4 className="font-bebas text-2xl metallic-text mb-2">{t.aboutModal.whyTitle}</h4>
+        <p className="text-sm text-white/40 italic mb-6">{t.aboutModal.whySubtitle}</p>
+
+        <div className="space-y-5">
+          <div className="flex gap-4">
+            <div className="w-1 metallic-line-vertical rounded-full flex-shrink-0" />
+            <div>
+              <h5 className="text-sm font-medium mb-1">
+                <span className="executional-shimmer">Executional</span> <span className="metallic-bold">Semantic Graph</span>
+              </h5>
+              <p className="text-sm text-white/45 leading-relaxed">
+                {t.aboutModal.feature1Desc}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="w-1 metallic-line-vertical rounded-full flex-shrink-0" />
+            <div>
+              <h5 className="text-sm font-medium metallic-bold mb-1">{t.aboutModal.feature2Title}</h5>
+              <p className="text-sm text-white/45 leading-relaxed">
+                {t.aboutModal.feature2Desc}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="w-1 metallic-line-vertical rounded-full flex-shrink-0" />
+            <div>
+              <h5 className="text-sm font-medium metallic-bold mb-1">{t.aboutModal.feature3Title}</h5>
+              <p className="text-sm text-white/45 leading-relaxed">
+                {t.aboutModal.feature3Desc}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="w-1 metallic-line-vertical rounded-full flex-shrink-0" />
+            <div>
+              <h5 className="text-sm font-medium metallic-bold mb-1">{t.aboutModal.feature4Title}</h5>
+              <p className="text-sm text-white/45 leading-relaxed">
+                {t.aboutModal.feature4Desc}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Vision */}
+      <div className="pt-6 border-t border-white/10">
+        <h4 className="font-bebas text-2xl metallic-text mb-2">{t.aboutModal.visionTitle}</h4>
+        <p className="text-white/50 leading-relaxed text-base mb-4">
+          {t.aboutModal.visionDesc}
+        </p>
+        <p className="text-white/60 leading-relaxed text-base italic">
+          {t.aboutModal.visionHighlight}
+        </p>
+      </div>
+
+      {/* Contact */}
+      <div className="pt-6 border-t border-white/10">
+        <h4 className="font-bebas text-xl metallic-text mb-3">{t.aboutModal.contactTitle}</h4>
+        <p className="text-white/40 text-sm mb-2">{t.aboutModal.contactDesc}</p>
+        <a href="mailto:brainfo@brainarts.com.tr" className="metallic-bold hover:opacity-80 transition-opacity text-sm">
+          brainfo@brainarts.com.tr
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// Demo Request Modal Content
+function DemoContent({ t, onClose }: { t: typeof translations.tr; onClose: () => void }) {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    company: "",
+    message: ""
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/demo-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        alert(t.demoModal.errorMessage);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert(t.demoModal.errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+          <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 className="font-bebas text-2xl metallic-text mb-4">{t.demoModal.successTitle}</h3>
+        <p className="text-white/50 mb-8">{t.demoModal.successDesc}</p>
+        <button
+          onClick={onClose}
+          className="metallic-button-dark px-8 py-3 text-sm font-medium tracking-wider"
+        >
+          <span className="metallic-text-hero">{t.demoModal.closeButton}</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label className="block text-sm text-white/40 mb-2">{t.demoModal.nameLabel}</label>
+        <input
+          type="text"
+          required
+          value={formData.name}
+          onChange={e => setFormData({...formData, name: e.target.value})}
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+          placeholder={t.demoModal.namePlaceholder}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm text-white/40 mb-2">{t.demoModal.emailLabel}</label>
+        <input
+          type="email"
+          required
+          value={formData.email}
+          onChange={e => setFormData({...formData, email: e.target.value})}
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+          placeholder={t.demoModal.emailPlaceholder}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm text-white/40 mb-2">{t.demoModal.companyLabel}</label>
+        <input
+          type="text"
+          value={formData.company}
+          onChange={e => setFormData({...formData, company: e.target.value})}
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+          placeholder={t.demoModal.companyPlaceholder}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm text-white/40 mb-2">{t.demoModal.messageLabel}</label>
+        <textarea
+          value={formData.message}
+          onChange={e => setFormData({...formData, message: e.target.value})}
+          rows={4}
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors resize-none"
+          placeholder={t.demoModal.messagePlaceholder}
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full metallic-button-dark px-8 py-4 text-base font-medium tracking-wider disabled:opacity-50"
+      >
+        <span className="metallic-text-hero">
+          {isLoading ? t.demoModal.submitting : t.demoModal.submitButton}
+        </span>
+      </button>
+    </form>
+  );
+}
+
+// Main Component
+export default function Home() {
+  const [selectedRegion, setSelectedRegion] = useState<RegionKey | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [openModal, setOpenModal] = useState<ModalType>(null);
+  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
+  const [lang, setLang] = useState<Lang>("tr");
+  const t = translations[lang];
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: (e.clientX / window.innerWidth) * 2 - 1,
+        y: (e.clientY / window.innerHeight) * 2 - 1,
+      });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const viewportCenter = windowHeight / 2;
+
+      let closestSection = 0;
+      let closestDistance = Infinity;
+
+      sectionsRef.current.forEach((section, index) => {
+        if (!section) return;
+        const rect = section.getBoundingClientRect();
+        const sectionCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(sectionCenter - viewportCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = index;
+        }
+      });
+
+      setActiveIndex(closestSection);
+
+      if (closestSection === 0 || closestSection === REGION_KEYS.length + 1) {
+        setSelectedRegion(null);
+      } else if (closestSection > 0 && closestSection <= REGION_KEYS.length) {
+        setSelectedRegion(REGION_KEYS[closestSection - 1]);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div className={`${bebasNeue.variable} ${inter.variable} min-h-screen bg-[#030303]`}>
+      {/* 3D Canvas */}
+      <div className="fixed inset-0 z-0">
+        <Canvas
+          camera={{ position: [0, 0, 8], fov: 45 }}
+          gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0 }}
+        >
+          <color attach="background" args={["#030303"]} />
+
+          <Suspense fallback={null}>
+            <ambientLight intensity={0.4} />
+            <directionalLight position={[5, 5, 5]} intensity={1} />
+            <directionalLight position={[-5, -5, -5]} intensity={0.3} />
+            <Environment preset="studio" background={false} />
+
+            <CameraController selectedRegion={selectedRegion} mousePosition={mousePosition} />
+            <MercuryBrain selectedRegion={selectedRegion} onRegionClick={setSelectedRegion} />
+
+            {/* Bloom effect for very subtle metallic glow */}
+            <EffectComposer>
+              <Bloom
+                intensity={0.02}
+                luminanceThreshold={0.95}
+                luminanceSmoothing={0.99}
+                mipmapBlur
+              />
+            </EffectComposer>
+          </Suspense>
         </Canvas>
       </div>
 
-      {/* Subtle grid pattern */}
-      <div
-        className="fixed inset-0 z-[5] pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
-      />
+      {/* Progress Dots - only show for hero + regions, not footer */}
+      <ProgressDots activeIndex={Math.min(activeIndex, REGION_KEYS.length)} total={REGION_KEYS.length} />
 
-      {/* Grain overlay */}
-      <div
-        className="fixed inset-0 z-10 pointer-events-none opacity-[0.012]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      {/* Fixed Header */}
+      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50">
-        {/* Subtle gradient backdrop */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none" />
-
-        <nav className="relative flex items-center justify-between px-8 md:px-16 lg:px-20 py-6">
-          {/* Logo + Brand */}
-          <a href="#" className="flex items-center gap-3 group">
-            {/* Logo */}
-            <div className="relative w-10 h-10 md:w-11 md:h-11">
-              <img
-                src="/logo.png"
-                alt="BrainArts Logo"
-                className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
-              />
-              {/* Subtle glow on hover */}
-              <div className="absolute inset-0 bg-white/5 rounded-full blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-transparent pointer-events-none" />
+        <nav className="relative flex items-center justify-between pt-8 pb-6" style={{ paddingLeft: '48px', paddingRight: '48px' }}>
+          <a href="#" className="flex items-center gap-3">
+            <div className="w-10 h-10 md:w-11 md:h-11">
+              <img src="/logo.png" alt="BrainArts" className="w-full h-full object-contain drop-shadow-lg" />
             </div>
-
-            {/* Brand Text */}
             <div className="flex flex-col">
-              <span className={`${bebasNeue.className} text-xl md:text-2xl text-white tracking-[0.2em] leading-none`}>
+              <span className="font-bebas text-2xl md:text-[1.7rem] tracking-[0.3em] metallic-text-bright">
                 BRAINARTS
               </span>
-              <span className={`${inter.className} text-[9px] md:text-[10px] text-white/30 tracking-[0.15em] uppercase mt-0.5`}>
+              <span className="font-inter text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-white/40">
                 Neural Intelligence
               </span>
             </div>
           </a>
 
-          {/* Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-white/40 hover:text-white text-sm tracking-wide transition-colors duration-300">
-              Özellikler
-            </a>
-            <a href="#about" className="text-white/40 hover:text-white text-sm tracking-wide transition-colors duration-300">
-              Hakkında
-            </a>
-            <a href="#contact" className="text-white/40 hover:text-white text-sm tracking-wide transition-colors duration-300">
-              İletişim
-            </a>
-            <button className="ml-4 px-5 py-2 border border-white/20 text-white/80 text-sm tracking-wide hover:bg-white hover:text-black hover:border-white transition-all duration-300">
-              Demo Talep Et
+          <div className="hidden md:flex items-center gap-8 lg:gap-10">
+            <button onClick={() => setOpenModal("features")} className="metallic-nav-animated text-sm font-medium tracking-wider">{t.nav.features}</button>
+            <button onClick={() => setOpenModal("about")} className="metallic-nav-animated text-sm font-medium tracking-wider">{t.nav.about}</button>
+            <button onClick={() => setOpenModal("demo")} className="metallic-button-dark px-5 py-2 text-sm font-medium tracking-wider">
+              <span className="metallic-text-hero">{t.nav.demo}</span>
+            </button>
+            {/* Language Toggle */}
+            <button
+              onClick={() => setLang(lang === "tr" ? "en" : "tr")}
+              className="flex items-center gap-1 px-3 py-1.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+            >
+              <span className={`text-xs font-medium ${lang === "tr" ? "text-white" : "text-white/40"}`}>TR</span>
+              <span className="text-white/20">|</span>
+              <span className={`text-xs font-medium ${lang === "en" ? "text-white" : "text-white/40"}`}>EN</span>
             </button>
           </div>
-
-          {/* Mobile menu button */}
-          <button className="md:hidden text-white/60 hover:text-white transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
         </nav>
       </header>
 
-      {/* Neural Connection - Brain to Card (desktop only) */}
-      <div className="hidden md:block">
-        <NeuralConnection selectedRegion={selectedRegion} cardRef={activeCardRef} />
-      </div>
-
-      {/* Progress Dots */}
-      <ProgressDots activeIndex={activeIndex} total={REGION_KEYS.length} />
-
-      {/* Scrollable Content */}
+      {/* Content */}
       <div className="relative z-20">
-        {/* Hero Section */}
+        {/* Hero */}
         <section
-          ref={el => { if (el) sectionsRef.current[0] = el; }}
-          className="h-screen flex flex-col items-center justify-between py-32"
+          ref={el => { sectionsRef.current[0] = el; }}
+          className="min-h-screen flex flex-col"
         >
-          {/* Tagline - top center */}
-          <div className="text-center mt-16 opacity-0 animate-fade-in">
-            <p className={`${inter.className} text-white/50 text-sm tracking-[0.25em] uppercase mb-6`}>
-              Executable Semantic Graph Platform
-            </p>
-            <h1 className={`${bebasNeue.className} text-4xl md:text-6xl lg:text-7xl text-white tracking-wide leading-tight`}>
-              <span className="text-white/50">BOM verisi statik değil,</span>
-              <br />
-              <span className="animated-gradient-text">
-                çalıştırılabilir bir graf.
-              </span>
-            </h1>
-            <p className={`${inter.className} text-white/30 text-sm md:text-base mt-6 max-w-xl mx-auto`}>
-              Formül tabanlı propagation, ratio-only blind calculation, multi-tenant izolasyon
-            </p>
+          {/* Hero Content - Left side */}
+          <div
+            className={`flex-1 flex items-center transition-all duration-700 ${
+              activeIndex === 0 ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{ paddingLeft: '48px', paddingRight: '48px' }}
+          >
+            <div className="max-w-lg">
+              {/* ESG Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-white/[0.03] border border-white/10">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-white/40 to-white/20 animate-pulse" />
+                <span className="text-[10px] tracking-[0.25em] uppercase text-white/50">
+                  {t.heroSubtitle}
+                </span>
+              </div>
+
+              {/* Main Tagline */}
+              <h1 className="font-bebas text-4xl md:text-5xl lg:text-6xl tracking-wide mb-4 metallic-text-title-animated">
+                {t.heroTagline}
+              </h1>
+
+              {/* Description */}
+              <p className="font-inter text-sm md:text-base text-white/50 leading-relaxed mb-8 max-w-md">
+                {t.heroDescription}
+              </p>
+
+            </div>
           </div>
 
-          {/* Spacer - brain görünecek alan */}
-          <div className="flex-1" />
-
-          {/* Scroll hint at bottom */}
-          <div className="text-center">
-            <p className={`${inter.className} text-white/20 text-xs tracking-[0.2em] uppercase mb-3`}>
-              Keşfetmek için aşağı kaydırın
-            </p>
+          {/* Scroll hint - Bottom */}
+          <div className={`pb-8 text-center transition-all duration-500 ${
+            activeIndex === 0 ? 'opacity-100' : 'opacity-0'
+          }`}>
             <div className="animate-bounce">
-              <svg className="w-4 h-4 mx-auto text-white/15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <p className="font-inter text-xs tracking-[0.25em] uppercase mb-2 metallic-text">
+                {t.scrollHint}
+              </p>
+              <svg className="w-5 h-5 mx-auto text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
             </div>
@@ -651,335 +1055,697 @@ export default function Home() {
 
         {/* Region Sections */}
         {REGION_KEYS.map((region, index) => {
-          const info = BRAIN_REGIONS[region];
-          const isLeft = index % 2 === 0;
+          const regionText = t.regions[region];
           const isActive = selectedRegion === region;
 
           return (
             <section
               key={region}
-              id={index === 0 ? "features" : index === 2 ? "about" : undefined}
-              ref={el => { if (el) sectionsRef.current[index + 1] = el; }}
-              className="min-h-screen flex items-center px-6 sm:px-12 md:px-24 lg:px-32"
+              ref={el => { sectionsRef.current[index + 1] = el; }}
+              className="min-h-screen flex items-center justify-between"
+              style={{ paddingLeft: '40px', paddingRight: '60px' }}
             >
+              {/* Left - Function Card */}
               <div
-                className={`max-w-md ${
-                  isLeft ? 'mr-auto' : 'ml-auto text-right'
+                className={`max-w-md transition-all duration-700 ease-out ${
+                  isActive
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 -translate-x-12'
                 }`}
               >
-                {/* Glass card wrapper */}
-                <div
-                  ref={isActive ? activeCardRef : null}
-                  className={`relative p-6 -m-6 rounded-2xl transition-all duration-500 ${
-                    isActive ? 'bg-white/[0.02] backdrop-blur-sm' : ''
-                  }`}
-                >
-                  {/* Subtle border glow when active */}
-                  {isActive && (
-                    <div className="absolute inset-0 rounded-2xl border border-indigo-500/10" />
-                  )}
-
-                  {/* Number - Staggered animation delay: 0ms */}
-                  <span className={`${bebasNeue.className} text-6xl sm:text-8xl md:text-9xl block mb-[-1.5rem] md:mb-[-2rem] transition-all duration-700 ${
-                    isActive
-                      ? 'text-indigo-400/[0.08] opacity-100 translate-y-0'
-                      : 'text-white/[0.06] opacity-10 translate-y-4'
-                  }`}
-                  style={{ transitionDelay: isActive ? '0ms' : '0ms' }}
-                  >
+                <div className={`relative p-6 md:p-8 rounded-2xl transition-all duration-500 ${
+                  isActive ? 'bg-white/[0.03] backdrop-blur-md border border-white/10' : ''
+                }`}>
+                  {/* Number */}
+                  <span className={`font-bebas text-7xl md:text-8xl block mb-[-1.5rem] transition-all duration-700 ${
+                    isActive ? 'metallic-number-animated' : 'text-white/5'
+                  }`}>
                     0{index + 1}
                   </span>
 
-                  {/* Subtitle - Staggered animation delay: 100ms */}
-                  <p className={`${inter.className} text-xs tracking-[0.2em] uppercase mb-2 transition-all duration-700 ${
-                    isActive
-                      ? 'text-indigo-300/50 opacity-100 translate-y-0'
-                      : 'text-white/30 opacity-10 translate-y-4'
-                  }`}
-                  style={{ transitionDelay: isActive ? '100ms' : '0ms' }}
-                  >
-                    {info.subtitle}
+                  {/* Subtitle */}
+                  <p className={`font-inter text-[10px] md:text-xs tracking-[0.25em] uppercase mb-2 transition-all duration-700 ${
+                    isActive ? 'text-white/50' : 'text-white/20'
+                  }`}>
+                    {regionText.subtitle}
                   </p>
 
-                  {/* Title - Staggered animation delay: 200ms */}
-                  <h3 className={`${bebasNeue.className} text-3xl sm:text-4xl md:text-5xl text-white tracking-wide mb-3 md:mb-4 transition-all duration-700 ${
-                    isActive
-                      ? 'opacity-100 translate-y-0'
-                      : 'opacity-10 translate-y-4'
-                  }`}
-                  style={{ transitionDelay: isActive ? '200ms' : '0ms' }}
-                  >
-                    {info.name}
-                  </h3>
+                  {/* Title */}
+                  <h2 className={`font-bebas text-3xl md:text-4xl lg:text-5xl tracking-wide mb-3 transition-all duration-700 ${
+                    isActive ? 'metallic-text-title-animated' : 'text-white/30'
+                  }`}>
+                    {regionText.name}
+                  </h2>
 
-                  {/* Line with gradient when active - Staggered animation delay: 300ms */}
-                  <div className={`h-px mb-6 transition-all duration-700 ${isLeft ? '' : 'ml-auto'} ${
-                    isActive
-                      ? 'w-16 bg-gradient-to-r from-indigo-500/50 to-purple-500/50 opacity-100'
-                      : 'w-12 bg-white/15 opacity-10'
-                  }`}
-                  style={{ transitionDelay: isActive ? '300ms' : '0ms' }}
-                  />
+                  {/* Function */}
+                  <p className={`font-inter text-xs md:text-sm font-medium tracking-wide mb-3 transition-all duration-700 ${
+                    isActive ? 'metallic-text' : 'text-white/20'
+                  }`}>
+                    {regionText.function}
+                  </p>
 
-                  {/* Description - Staggered animation delay: 400ms */}
-                  <p className={`${inter.className} text-white/40 text-sm leading-relaxed transition-all duration-700 ${
-                    isActive
-                      ? 'opacity-100 translate-y-0'
-                      : 'opacity-10 translate-y-4'
-                  }`}
-                  style={{ transitionDelay: isActive ? '400ms' : '0ms' }}
-                  >
-                    {info.description}
+                  {/* Divider */}
+                  <div className={`h-px mb-4 transition-all duration-700 overflow-hidden ${
+                    isActive ? 'w-16' : 'w-10 bg-white/10'
+                  }`}>
+                    {isActive && <div className="h-full w-full metallic-line-animated" />}
+                  </div>
+
+                  {/* Description */}
+                  <p className={`font-inter text-xs md:text-sm leading-relaxed transition-all duration-700 ${
+                    isActive ? 'text-white/45' : 'text-white/15'
+                  }`}>
+                    {regionText.description}
                   </p>
                 </div>
+              </div>
+
+              {/* Right - Punchline */}
+              <div
+                className={`max-w-sm text-right transition-all duration-1000 ease-out ${
+                  isActive
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 translate-x-12'
+                }`}
+              >
+                <p className={`font-inter text-lg md:text-xl lg:text-2xl leading-relaxed transition-all duration-700 ${
+                  isActive ? 'metallic-text-punchline' : 'text-white/10'
+                }`}>
+                  {regionText.punchline}
+                </p>
               </div>
             </section>
           );
         })}
 
-        {/* Features Grid Section */}
-        <section className="min-h-screen flex items-center justify-center px-8 md:px-16 py-32">
-          <div className="max-w-5xl w-full">
-            {/* Section Header */}
-            <div className="text-center mb-16">
-              <p className={`${inter.className} text-indigo-400/60 text-xs tracking-[0.3em] uppercase mb-4`}>
-                Platform Özellikleri
-              </p>
-              <h2 className={`${bebasNeue.className} text-4xl md:text-5xl text-white tracking-wide`}>
-                Endüstriyel Zeka
-              </h2>
-            </div>
-
-            {/* Feature Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Feature 1 - BOM Intelligence */}
-              <div className="reveal-on-scroll group relative p-8 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10 transition-all duration-500">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative">
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 flex items-center justify-center mb-6 border border-indigo-500/10">
-                    <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                  </div>
-                  <h3 className={`${bebasNeue.className} text-2xl text-white tracking-wide mb-3`}>
-                    BOM Zekası
-                  </h3>
-                  <p className={`${inter.className} text-white/40 text-sm leading-relaxed`}>
-                    Ürün ağacı verilerinizi otomatik analiz eder. Maliyet değişimlerini önceden tahmin eder, alternatif malzeme önerileri sunar.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 2 - Cost Propagation */}
-              <div className="reveal-on-scroll group relative p-8 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10 transition-all duration-500">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative">
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/10 flex items-center justify-center mb-6 border border-purple-500/10">
-                    <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <h3 className={`${bebasNeue.className} text-2xl text-white tracking-wide mb-3`}>
-                    Maliyet Propagasyonu
-                  </h3>
-                  <p className={`${inter.className} text-white/40 text-sm leading-relaxed`}>
-                    Bir malzeme fiyatı değiştiğinde, tüm etkilenen ürünlerin maliyeti anlık olarak güncellenir. Marj ve teklif fiyatları otomatik hesaplanır.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 3 - RFQ Workflow */}
-              <div className="reveal-on-scroll group relative p-8 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10 transition-all duration-500">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative">
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 flex items-center justify-center mb-6 border border-cyan-500/10">
-                    <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                  </div>
-                  <h3 className={`${bebasNeue.className} text-2xl text-white tracking-wide mb-3`}>
-                    Teklif Yönetimi
-                  </h3>
-                  <p className={`${inter.className} text-white/40 text-sm leading-relaxed`}>
-                    RFQ'dan seri üretime kadar tüm teklif sürecini yönetin. Müşteri revizyonları, onay akışları ve versiyonlama dahil.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 4 - AI Agents */}
-              <div className="reveal-on-scroll group relative p-8 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10 transition-all duration-500">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative">
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center mb-6 border border-amber-500/10">
-                    <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <h3 className={`${bebasNeue.className} text-2xl text-white tracking-wide mb-3`}>
-                    AI Agents (MCP)
-                  </h3>
-                  <p className={`${inter.className} text-white/40 text-sm leading-relaxed`}>
-                    Model Context Protocol ile AI asistanlarınız BOM verilerinize güvenle erişir. Analiz ve raporlama görevlerini otomatize eder.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Section - Frosted Glass */}
-        <section id="contact" className="min-h-screen flex items-center justify-center px-8 md:px-16">
-          <div className="relative max-w-lg w-full">
-            {/* Frosted glass card */}
-            <div className="relative backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-8 md:p-12">
-              {/* Subtle gradient overlay */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
-
-              <div className="relative text-center">
-                <h3 className={`${bebasNeue.className} text-4xl md:text-5xl text-white tracking-wide mb-4`}>
-                  İLETİŞİME GEÇİN
-                </h3>
-                <p className={`${inter.className} text-white/40 text-sm mb-8`}>
-                  Projeleriniz için bizimle iletişime geçin
-                </p>
-
-                <form className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Adınız"
-                      className="w-full px-4 py-3 bg-white/[0.03] backdrop-blur border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all text-sm"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Soyadınız"
-                      className="w-full px-4 py-3 bg-white/[0.03] backdrop-blur border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all text-sm"
-                    />
-                  </div>
-                  <input
-                    type="email"
-                    placeholder="E-posta"
-                    className="w-full px-4 py-3 bg-white/[0.03] backdrop-blur border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all text-sm"
-                  />
-                  <textarea
-                    placeholder="Mesajınız"
-                    rows={4}
-                    className="w-full px-4 py-3 bg-white/[0.03] backdrop-blur border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all text-sm resize-none"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full py-4 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
-                  >
-                    GÖNDER
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Footer */}
-        <footer className="py-10 px-6 md:px-12 border-t border-white/5">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Logo + Brand */}
-            <a href="#" className="flex items-center gap-2 opacity-40 hover:opacity-60 transition-opacity">
-              <img src="/logo.png" alt="BrainArts" className="w-6 h-6 object-contain" />
-              <span className={`${bebasNeue.className} text-white tracking-[0.15em]`}>BRAINARTS</span>
-            </a>
+        <section
+          ref={el => { sectionsRef.current[REGION_KEYS.length + 1] = el; }}
+          className="min-h-[80vh] flex flex-col justify-end pb-12"
+          style={{ paddingLeft: '40px', paddingRight: '40px' }}
+        >
+          {/* Main CTA */}
+          <div className={`text-center mb-8 transition-all duration-700 ${
+            activeIndex === REGION_KEYS.length + 1
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-8'
+          }`}>
+            {/* Title */}
+            <h2 className="font-bebas text-4xl md:text-5xl metallic-text-title-animated tracking-wide mb-4">
+              {t.footerTitle}
+            </h2>
 
-            {/* Links */}
-            <div className="flex items-center gap-6">
-              <a href="#" className={`${inter.className} text-white/20 text-xs hover:text-white/40 transition-colors`}>Gizlilik</a>
-              <a href="#" className={`${inter.className} text-white/20 text-xs hover:text-white/40 transition-colors`}>Kullanım Şartları</a>
-            </div>
+            {/* Subtitle */}
+            <p className="font-inter text-white/35 text-sm mb-6 max-w-md mx-auto">
+              {t.footerSubtitle}
+            </p>
 
-            {/* Copyright */}
-            <span className={`${inter.className} text-white/20 text-xs`}>© 2025 BrainArts. Tüm hakları saklıdır.</span>
+            {/* Button */}
+            <button onClick={() => setOpenModal("demo")} className="metallic-button-dark px-10 py-3.5 text-base font-medium tracking-wider">
+              <span className="metallic-text-hero">{t.nav.demo}</span>
+            </button>
           </div>
-        </footer>
+
+          {/* Bottom Bar - Copyright left, Social Icons right */}
+          <div className="flex items-center justify-between mb-4">
+            {/* Copyright - Left */}
+            <p className="font-inter text-[11px] text-white/25 tracking-wider">
+              {t.copyright}
+            </p>
+
+            {/* Social Icons - Right */}
+            <div className="flex items-center gap-4">
+              {/* X/Twitter */}
+              <a
+                href="https://x.com/BrainArts_"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-icon-metallic group"
+              >
+                <svg className="w-5 h-5 icon-silver-shimmer" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </a>
+              {/* LinkedIn */}
+              <a
+                href="https://www.linkedin.com/company/brainarts"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-icon-metallic group"
+              >
+                <svg className="w-5 h-5 icon-silver-shimmer" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </a>
+              {/* GitHub */}
+              <a
+                href="https://github.com/brhmkrs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-icon-metallic group"
+              >
+                <svg className="w-5 h-5 icon-silver-shimmer" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </section>
       </div>
 
+      {/* Modals */}
+      <Modal isOpen={openModal === "features"} onClose={() => setOpenModal(null)} title={t.featuresModal.title}>
+        <FeaturesContent t={t} />
+      </Modal>
+
+      <Modal isOpen={openModal === "about"} onClose={() => setOpenModal(null)} title={t.aboutModal.title}>
+        <AboutContent t={t} />
+      </Modal>
+
+      <Modal isOpen={openModal === "demo"} onClose={() => setOpenModal(null)} title={t.demoModal.title}>
+        <DemoContent t={t} onClose={() => setOpenModal(null)} />
+      </Modal>
+
+      {/* Metallic Styles */}
       <style jsx global>{`
+        /* Base metallic text - bright version for headers */
+        .metallic-text-bright {
+          background: linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #e0e0e0 20%,
+            #ffffff 40%,
+            #c0c0c0 60%,
+            #ffffff 80%,
+            #e0e0e0 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        /* Base metallic text */
+        .metallic-text {
+          background: linear-gradient(
+            180deg,
+            #e8e8e8 0%,
+            #ffffff 15%,
+            #a0a0a0 30%,
+            #ffffff 50%,
+            #909090 70%,
+            #ffffff 85%,
+            #c0c0c0 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        /* Hero metallic - animated shine (slow) */
+        .metallic-text-hero {
+          background: linear-gradient(
+            90deg,
+            #505050 0%,
+            #808080 15%,
+            #c0c0c0 30%,
+            #ffffff 50%,
+            #c0c0c0 70%,
+            #808080 85%,
+            #505050 100%
+          );
+          background-size: 300% 100%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: slow-shimmer 18s ease-in-out infinite;
+          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+        }
+
+        /* Footer metallic - very slow elegant shine */
+        .metallic-text-footer {
+          background: linear-gradient(
+            90deg,
+            #707070 0%,
+            #909090 15%,
+            #c0c0c0 30%,
+            #ffffff 50%,
+            #c0c0c0 70%,
+            #909090 85%,
+            #707070 100%
+          );
+          background-size: 300% 100%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: slow-shimmer 16s ease-in-out infinite;
+          filter: drop-shadow(0 2px 6px rgba(255,255,255,0.15));
+        }
+
+        /* Title metallic - static but shiny */
+        .metallic-text-title {
+          background: linear-gradient(
+            135deg,
+            #909090 0%,
+            #f0f0f0 25%,
+            #ffffff 50%,
+            #d0d0d0 75%,
+            #909090 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          filter: drop-shadow(0 2px 6px rgba(255,255,255,0.1));
+        }
+
+        /* Title metallic - with very slow shimmer */
+        .metallic-text-title-animated {
+          background: linear-gradient(
+            90deg,
+            #707070 0%,
+            #909090 15%,
+            #c0c0c0 30%,
+            #ffffff 50%,
+            #c0c0c0 70%,
+            #909090 85%,
+            #707070 100%
+          );
+          background-size: 300% 100%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: slow-shimmer 8s ease-in-out infinite;
+          filter: drop-shadow(0 2px 6px rgba(255,255,255,0.1));
+        }
+
+        @keyframes slow-shimmer {
+          0%, 100% { background-position: 100% center; }
+          50% { background-position: 0% center; }
+        }
+
+        /* Punchline metallic - elegant shimmer for quotes */
+        .metallic-text-punchline {
+          background: linear-gradient(
+            90deg,
+            #606060 0%,
+            #808080 15%,
+            #b0b0b0 30%,
+            #e0e0e0 50%,
+            #b0b0b0 70%,
+            #808080 85%,
+            #606060 100%
+          );
+          background-size: 300% 100%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: slow-shimmer 10s ease-in-out infinite;
+          filter: drop-shadow(0 2px 8px rgba(255,255,255,0.05));
+        }
+
+        /* Number metallic - with slow shimmer, low opacity */
+        .metallic-number-animated {
+          background: linear-gradient(
+            90deg,
+            #404040 0%,
+            #606060 20%,
+            #909090 40%,
+            #c0c0c0 50%,
+            #909090 60%,
+            #606060 80%,
+            #404040 100%
+          );
+          background-size: 300% 100%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: slow-shimmer 12s ease-in-out infinite;
+          opacity: 0.4;
+        }
+
+        @keyframes metallic-shine {
+          0%, 100% { background-position: 200% center; }
+          50% { background-position: -200% center; }
+        }
+
+        /* Metallic line - static */
+        .metallic-line {
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            #606060 10%,
+            #ffffff 50%,
+            #606060 90%,
+            transparent 100%
+          );
+        }
+
+        /* Metallic line - with traveling light */
+        .metallic-line-animated {
+          background: linear-gradient(
+            90deg,
+            #303030 0%,
+            #505050 20%,
+            #707070 40%,
+            #ffffff 50%,
+            #707070 60%,
+            #505050 80%,
+            #303030 100%
+          );
+          background-size: 200% 100%;
+          animation: line-travel 6s ease-in-out infinite;
+        }
+
+        @keyframes line-travel {
+          0% { background-position: 100% center; }
+          100% { background-position: -100% center; }
+        }
+
+        /* Metallic vertical line - slow shimmer */
+        .metallic-line-vertical {
+          background: linear-gradient(
+            180deg,
+            #707070 0%,
+            #a0a0a0 25%,
+            #d0d0d0 50%,
+            #a0a0a0 75%,
+            #505050 100%
+          );
+          background-size: 100% 300%;
+          animation: vertical-shimmer 8s ease-in-out infinite;
+        }
+
+        @keyframes vertical-shimmer {
+          0%, 100% { background-position: center 100%; }
+          50% { background-position: center 0%; }
+        }
+
+        /* Metallic button - light version */
+        .metallic-button {
+          background: linear-gradient(
+            180deg,
+            #e0e0e0 0%,
+            #ffffff 20%,
+            #c0c0c0 50%,
+            #909090 80%,
+            #707070 100%
+          );
+          color: #1a1a1a;
+          font-weight: 500;
+          border: 1px solid rgba(255,255,255,0.3);
+          border-radius: 2px;
+          transition: all 0.3s ease;
+          box-shadow:
+            0 2px 4px rgba(0,0,0,0.3),
+            inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        .metallic-button:hover {
+          background: linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f0f0f0 20%,
+            #d0d0d0 50%,
+            #a0a0a0 80%,
+            #808080 100%
+          );
+          transform: translateY(-1px);
+          box-shadow:
+            0 4px 8px rgba(0,0,0,0.4),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+
+        /* Metallic button - dark version with animated text */
+        .metallic-button-dark {
+          background: rgba(10, 10, 10, 0.8);
+          border: 1px solid;
+          border-image: linear-gradient(
+            135deg,
+            #404040 0%,
+            #808080 25%,
+            #c0c0c0 50%,
+            #808080 75%,
+            #404040 100%
+          ) 1;
+          border-radius: 0;
+          transition: all 0.3s ease;
+          box-shadow:
+            0 0 20px rgba(128, 128, 128, 0.1),
+            inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .metallic-button-dark:hover {
+          background: rgba(20, 20, 20, 0.9);
+          border-image: linear-gradient(
+            135deg,
+            #606060 0%,
+            #a0a0a0 25%,
+            #e0e0e0 50%,
+            #a0a0a0 75%,
+            #606060 100%
+          ) 1;
+          box-shadow:
+            0 0 30px rgba(128, 128, 128, 0.2),
+            inset 0 0 20px rgba(0, 0, 0, 0.3);
+          transform: translateY(-2px);
+        }
+
+        /* Metallic icon (for SVGs) */
+        .metallic-icon {
+          stroke: url(#metallic-gradient);
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+          stroke: #a0a0a0;
+        }
+
+        /* Metallic subtle (for small text/subtitles) */
+        .metallic-text-subtle {
+          background: linear-gradient(
+            180deg,
+            #505050 0%,
+            #707070 40%,
+            #909090 50%,
+            #707070 60%,
+            #505050 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        /* Metallic nav links - bright version */
+        .metallic-nav-bright {
+          background: linear-gradient(
+            180deg,
+            #a0a0a0 0%,
+            #d0d0d0 30%,
+            #ffffff 50%,
+            #d0d0d0 70%,
+            #a0a0a0 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          transition: all 0.3s ease;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        }
+
+        .metallic-nav-bright:hover {
+          background: linear-gradient(
+            180deg,
+            #d0d0d0 0%,
+            #f0f0f0 30%,
+            #ffffff 50%,
+            #f0f0f0 70%,
+            #d0d0d0 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          filter: drop-shadow(0 2px 6px rgba(255,255,255,0.3));
+        }
+
+        /* Metallic nav links - animated shimmer */
+        .metallic-nav-animated {
+          background: linear-gradient(
+            90deg,
+            #808080 0%,
+            #a0a0a0 20%,
+            #d0d0d0 40%,
+            #ffffff 50%,
+            #d0d0d0 60%,
+            #a0a0a0 80%,
+            #808080 100%
+          );
+          background-size: 300% 100%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: slow-shimmer 10s ease-in-out infinite;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+          transition: filter 0.3s ease;
+        }
+
+        .metallic-nav-animated:hover {
+          filter: drop-shadow(0 2px 8px rgba(255,255,255,0.4));
+          animation-duration: 3s;
+        }
+
+        /* Metallic nav links */
+        .metallic-nav {
+          background: linear-gradient(
+            180deg,
+            #707070 0%,
+            #a0a0a0 30%,
+            #d0d0d0 50%,
+            #a0a0a0 70%,
+            #707070 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          transition: all 0.3s ease;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+        }
+
+        .metallic-nav:hover {
+          background: linear-gradient(
+            180deg,
+            #c0c0c0 0%,
+            #e0e0e0 30%,
+            #ffffff 50%,
+            #e0e0e0 70%,
+            #c0c0c0 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          filter: drop-shadow(0 2px 4px rgba(255,255,255,0.2));
+        }
+
+        /* Font classes */
+        .font-bebas {
+          font-family: var(--font-bebas), sans-serif;
+        }
+
+        .font-inter {
+          font-family: var(--font-inter), sans-serif;
+        }
+
         html {
           scroll-behavior: smooth;
         }
 
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        /* Social icon with silver shimmer */
+        .social-icon-metallic {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(180, 180, 180, 0.15);
+          transition: all 0.4s ease;
+          animation: icon-border-silver 10s ease-in-out infinite;
         }
 
-        .animate-fade-in {
-          animation: fade-in 1.2s ease-out 0.5s forwards;
+        .social-icon-metallic svg {
+          transition: all 0.4s ease;
         }
 
-        /* Animated gradient text */
-        .animated-gradient-text {
+        /* SVG with metallic gradient fill */
+        .social-icon-metallic svg path {
+          fill: url(#silver-gradient);
+        }
+
+        .social-icon-metallic:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(220, 220, 220, 0.3);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .social-icon-metallic:hover svg path {
+          fill: url(#silver-gradient-bright);
+        }
+
+        @keyframes icon-border-silver {
+          0%, 100% { border-color: rgba(140, 140, 140, 0.15); }
+          50% { border-color: rgba(200, 200, 200, 0.3); }
+        }
+
+        /* Silver shimmer effect for icons */
+        .icon-silver-shimmer path {
+          fill: #707070;
+          animation: silver-icon-shimmer 10s ease-in-out infinite;
+        }
+
+        .social-icon-metallic:hover .icon-silver-shimmer path {
+          fill: #d0d0d0;
+          filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
+        }
+
+        @keyframes silver-icon-shimmer {
+          0%, 100% { fill: #606060; }
+          25% { fill: #808080; }
+          50% { fill: #a8a8a8; }
+          75% { fill: #808080; }
+        }
+
+        /* Executional keyword - bright metallic shimmer */
+        .executional-shimmer {
           background: linear-gradient(
             90deg,
-            #e2e8f0 0%,
-            #a5b4fc 20%,
-            #c4b5fd 40%,
-            #e2e8f0 60%,
-            #a5b4fc 80%,
-            #c4b5fd 100%
+            #909090 0%,
+            #c0c0c0 15%,
+            #e8e8e8 30%,
+            #ffffff 50%,
+            #e8e8e8 70%,
+            #c0c0c0 85%,
+            #909090 100%
           );
-          background-size: 200% 100%;
+          background-size: 300% 100%;
           -webkit-background-clip: text;
-          background-clip: text;
           -webkit-text-fill-color: transparent;
-          animation: gradient-shift 4s ease-in-out infinite;
+          background-clip: text;
+          font-weight: 600;
+          animation: slow-shimmer 12s ease-in-out infinite;
+          filter: drop-shadow(0 2px 8px rgba(255,255,255,0.2));
         }
 
-        @keyframes gradient-shift {
-          0%, 100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
+        /* Bold highlight text - metallic */
+        .metallic-bold {
+          background: linear-gradient(
+            90deg,
+            #a0a0a0 0%,
+            #d0d0d0 25%,
+            #ffffff 50%,
+            #d0d0d0 75%,
+            #a0a0a0 100%
+          );
+          background-size: 300% 100%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          font-weight: 600;
+          animation: slow-shimmer 14s ease-in-out infinite;
         }
 
-        /* Scroll reveal animation for feature cards */
-        .reveal-on-scroll {
-          opacity: 0;
-          transform: translateY(30px);
-          transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        /* Scrollbar styling for modals */
+        .overflow-y-auto::-webkit-scrollbar {
+          width: 6px;
         }
-
-        .reveal-on-scroll.revealed {
-          opacity: 1;
-          transform: translateY(0);
+        .overflow-y-auto::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 3px;
         }
-
-        /* Staggered delays for cards */
-        .reveal-on-scroll:nth-child(1) { transition-delay: 0ms; }
-        .reveal-on-scroll:nth-child(2) { transition-delay: 150ms; }
-        .reveal-on-scroll:nth-child(3) { transition-delay: 300ms; }
-        .reveal-on-scroll:nth-child(4) { transition-delay: 450ms; }
-
-        /* Animated dash for connection line */
-        @keyframes dash-flow {
-          from {
-            stroke-dashoffset: 24;
-          }
-          to {
-            stroke-dashoffset: 0;
-          }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
         }
-
-        .animate-dash {
-          animation: dash-flow 1s linear infinite;
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
         }
       `}</style>
     </div>
