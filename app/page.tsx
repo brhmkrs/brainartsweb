@@ -382,26 +382,36 @@ function MetallicText3D({
 // Camera Controller - cinematic smooth transitions
 function CameraController({
   selectedRegion,
-  mousePosition
+  mousePosition,
+  isMobile
 }: {
   selectedRegion: RegionKey | null;
   mousePosition: { x: number; y: number };
+  isMobile: boolean;
 }) {
   const { camera } = useThree();
-  const currentPos = useRef({ x: 0, y: 0, z: 8 });
+  // On mobile, camera is further back
+  const defaultZ = isMobile ? 12 : 8;
+  const currentPos = useRef({ x: 0, y: 0, z: defaultZ });
   const velocity = useRef({ x: 0, y: 0, z: 0 });
 
   useFrame(() => {
     // Determine target position
-    let targetPos = { x: 0, y: 0, z: 8 };
+    let targetPos = { x: 0, y: 0, z: defaultZ };
 
     if (selectedRegion) {
       const regionData = BRAIN_REGIONS[selectedRegion];
-      targetPos = { ...regionData.cameraOffset };
+      // On mobile, pull camera back more
+      const mobileScale = isMobile ? 1.4 : 1;
+      targetPos = {
+        x: regionData.cameraOffset.x * mobileScale,
+        y: regionData.cameraOffset.y * mobileScale,
+        z: regionData.cameraOffset.z * mobileScale
+      };
     }
 
-    // Mouse influence only when no region selected
-    if (!selectedRegion) {
+    // Mouse influence only when no region selected (disabled on mobile)
+    if (!selectedRegion && !isMobile) {
       targetPos.x += mousePosition.x * 0.3;
       targetPos.y -= mousePosition.y * 0.2;
     }
@@ -430,8 +440,8 @@ function CameraController({
     currentPos.current.y += velocity.current.y;
     currentPos.current.z += velocity.current.z;
 
-    // Minimum distance from center
-    const minRadius = 6.5;
+    // Minimum distance from center (higher on mobile)
+    const minRadius = isMobile ? 9 : 6.5;
     const currentRadius = Math.sqrt(
       currentPos.current.x ** 2 +
       currentPos.current.y ** 2 +
@@ -455,14 +465,18 @@ function CameraController({
 function MercuryBrain({
   selectedRegion,
   onRegionClick,
+  isMobile,
 }: {
   selectedRegion: RegionKey | null;
   onRegionClick: (region: RegionKey | null) => void;
+  isMobile: boolean;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(BRAIN_MODEL);
   const { raycaster, camera, gl } = useThree();
   const pointer = useMemo(() => new THREE.Vector2(), []);
+  // Scale down on mobile
+  const scale = isMobile ? MODEL_SCALE * 0.85 : MODEL_SCALE;
 
   useFrame((state) => {
     if (groupRef.current && !selectedRegion) {
@@ -531,7 +545,7 @@ function MercuryBrain({
   }, [selectedRegion, onRegionClick, raycaster, camera, gl, scene, pointer]);
 
   return (
-    <group ref={groupRef} scale={MODEL_SCALE}>
+    <group ref={groupRef} scale={scale}>
       <Center>
         <primitive object={scene} />
       </Center>
@@ -539,10 +553,10 @@ function MercuryBrain({
   );
 }
 
-// Progress Dots
+// Progress Dots - hidden on mobile
 function ProgressDots({ activeIndex, total }: { activeIndex: number; total: number }) {
   return (
-    <div className="fixed right-8 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3">
+    <div className="hidden md:flex fixed right-8 top-1/2 -translate-y-1/2 z-40 flex-col gap-3">
       {Array.from({ length: total + 1 }).map((_, i) => (
         <div
           key={i}
@@ -595,14 +609,14 @@ function Modal({
         </button>
 
         {/* Header */}
-        <div className="px-10 py-8 border-b border-white/5">
-          <h2 className="font-bebas text-3xl md:text-4xl tracking-wide metallic-text-title-animated">
+        <div className="px-4 md:px-10 py-6 md:py-8 border-b border-white/5">
+          <h2 className="font-bebas text-2xl md:text-4xl tracking-wide metallic-text-title-animated">
             {title}
           </h2>
         </div>
 
         {/* Body */}
-        <div className="px-10 py-8">
+        <div className="px-4 md:px-10 py-6 md:py-8">
           {children}
         </div>
       </div>
@@ -882,7 +896,17 @@ export default function Home() {
   const [openModal, setOpenModal] = useState<ModalType>(null);
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
   const [lang, setLang] = useState<Lang>("tr");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const t = translations[lang];
+
+  // Detect mobile screen
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -946,8 +970,8 @@ export default function Home() {
             <directionalLight position={[-5, -5, -5]} intensity={0.3} />
             <Environment preset="studio" background={false} />
 
-            <CameraController selectedRegion={selectedRegion} mousePosition={mousePosition} />
-            <MercuryBrain selectedRegion={selectedRegion} onRegionClick={setSelectedRegion} />
+            <CameraController selectedRegion={selectedRegion} mousePosition={mousePosition} isMobile={isMobile} />
+            <MercuryBrain selectedRegion={selectedRegion} onRegionClick={setSelectedRegion} isMobile={isMobile} />
 
             {/* Bloom effect for very subtle metallic glow */}
             <EffectComposer>
@@ -968,21 +992,22 @@ export default function Home() {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-transparent pointer-events-none" />
-        <nav className="relative flex items-center justify-between pt-8 pb-6" style={{ paddingLeft: '48px', paddingRight: '48px' }}>
-          <a href="#" className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-11 md:h-11">
+        <nav className="relative flex items-center justify-between pt-6 pb-4 md:pt-8 md:pb-6 px-4 md:px-12">
+          <a href="#" className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-11 md:h-11">
               <img src="/logo.png" alt="BrainArts" className="w-full h-full object-contain drop-shadow-lg" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bebas text-2xl md:text-[1.7rem] tracking-[0.3em] metallic-text-bright">
+              <span className="font-bebas text-lg md:text-[1.7rem] tracking-[0.2em] md:tracking-[0.3em] metallic-text-bright">
                 BRAINARTS
               </span>
-              <span className="font-inter text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-white/40">
+              <span className="font-inter text-[7px] md:text-[10px] tracking-[0.15em] md:tracking-[0.2em] uppercase text-white/40">
                 Neural Intelligence
               </span>
             </div>
           </a>
 
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8 lg:gap-10">
             <button onClick={() => setOpenModal("features")} className="metallic-nav-animated text-sm font-medium tracking-wider">{t.nav.features}</button>
             <button onClick={() => setOpenModal("about")} className="metallic-nav-animated text-sm font-medium tracking-wider">{t.nav.about}</button>
@@ -999,7 +1024,44 @@ export default function Home() {
               <span className={`text-xs font-medium ${lang === "en" ? "text-white" : "text-white/40"}`}>EN</span>
             </button>
           </div>
+
+          {/* Mobile Menu Button & Language */}
+          <div className="flex md:hidden items-center gap-3">
+            {/* Mobile Language Toggle */}
+            <button
+              onClick={() => setLang(lang === "tr" ? "en" : "tr")}
+              className="flex items-center gap-1 px-2 py-1 rounded bg-white/5 border border-white/10"
+            >
+              <span className={`text-[10px] font-medium ${lang === "tr" ? "text-white" : "text-white/40"}`}>TR</span>
+              <span className="text-white/20">|</span>
+              <span className={`text-[10px] font-medium ${lang === "en" ? "text-white" : "text-white/40"}`}>EN</span>
+            </button>
+            {/* Hamburger Menu */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded bg-white/5 border border-white/10"
+            >
+              <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </nav>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-lg border-b border-white/10 px-4 py-4 space-y-3">
+            <button onClick={() => { setOpenModal("features"); setMobileMenuOpen(false); }} className="block w-full text-left text-sm text-white/70 py-2">{t.nav.features}</button>
+            <button onClick={() => { setOpenModal("about"); setMobileMenuOpen(false); }} className="block w-full text-left text-sm text-white/70 py-2">{t.nav.about}</button>
+            <button onClick={() => { setOpenModal("demo"); setMobileMenuOpen(false); }} className="block w-full text-center metallic-button-dark px-5 py-2.5 text-sm font-medium tracking-wider">
+              <span className="metallic-text-hero">{t.nav.demo}</span>
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Content */}
@@ -1013,10 +1075,9 @@ export default function Home() {
           <div
             className={`flex-1 flex items-center transition-all duration-700 ${
               activeIndex === 0 ? 'opacity-100' : 'opacity-0'
-            }`}
-            style={{ paddingLeft: '48px', paddingRight: '48px' }}
+            } px-4 md:px-12`}
           >
-            <div className="max-w-lg">
+            <div className="max-w-lg bg-black/40 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none rounded-xl p-4 md:p-0">
               {/* ESG Badge */}
               <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-white/[0.03] border border-white/10">
                 <div className="w-2 h-2 rounded-full bg-gradient-to-r from-white/40 to-white/20 animate-pulse" />
@@ -1062,22 +1123,21 @@ export default function Home() {
             <section
               key={region}
               ref={el => { sectionsRef.current[index + 1] = el; }}
-              className="min-h-screen flex items-center justify-between"
-              style={{ paddingLeft: '40px', paddingRight: '60px' }}
+              className="min-h-screen flex flex-col md:flex-row items-center justify-center md:justify-between px-4 md:px-10 py-8 md:py-0"
             >
               {/* Left - Function Card */}
               <div
-                className={`max-w-md transition-all duration-700 ease-out ${
+                className={`w-full md:w-auto max-w-sm md:max-w-md transition-all duration-700 ease-out mb-4 md:mb-0 ${
                   isActive
-                    ? 'opacity-100 translate-x-0'
-                    : 'opacity-0 -translate-x-12'
+                    ? 'opacity-100 translate-y-0 md:translate-x-0'
+                    : 'opacity-0 -translate-y-4 md:-translate-y-0 md:-translate-x-12'
                 }`}
               >
-                <div className={`relative p-6 md:p-8 rounded-2xl transition-all duration-500 ${
-                  isActive ? 'bg-white/[0.03] backdrop-blur-md border border-white/10' : ''
+                <div className={`relative p-4 md:p-8 rounded-2xl transition-all duration-500 ${
+                  isActive ? 'bg-black/70 md:bg-white/[0.03] backdrop-blur-lg md:backdrop-blur-md border border-white/10' : ''
                 }`}>
                   {/* Number */}
-                  <span className={`font-bebas text-7xl md:text-8xl block mb-[-1.5rem] transition-all duration-700 ${
+                  <span className={`font-bebas text-5xl md:text-8xl block mb-[-1rem] md:mb-[-1.5rem] transition-all duration-700 ${
                     isActive ? 'metallic-number-animated' : 'text-white/5'
                   }`}>
                     0{index + 1}
@@ -1091,48 +1151,50 @@ export default function Home() {
                   </p>
 
                   {/* Title */}
-                  <h2 className={`font-bebas text-3xl md:text-4xl lg:text-5xl tracking-wide mb-3 transition-all duration-700 ${
+                  <h2 className={`font-bebas text-2xl md:text-4xl lg:text-5xl tracking-wide mb-2 md:mb-3 transition-all duration-700 ${
                     isActive ? 'metallic-text-title-animated' : 'text-white/30'
                   }`}>
                     {regionText.name}
                   </h2>
 
                   {/* Function */}
-                  <p className={`font-inter text-xs md:text-sm font-medium tracking-wide mb-3 transition-all duration-700 ${
+                  <p className={`font-inter text-[11px] md:text-sm font-medium tracking-wide mb-2 md:mb-3 transition-all duration-700 ${
                     isActive ? 'metallic-text' : 'text-white/20'
                   }`}>
                     {regionText.function}
                   </p>
 
                   {/* Divider */}
-                  <div className={`h-px mb-4 transition-all duration-700 overflow-hidden ${
-                    isActive ? 'w-16' : 'w-10 bg-white/10'
+                  <div className={`h-px mb-3 md:mb-4 transition-all duration-700 overflow-hidden ${
+                    isActive ? 'w-12 md:w-16' : 'w-8 md:w-10 bg-white/10'
                   }`}>
                     {isActive && <div className="h-full w-full metallic-line-animated" />}
                   </div>
 
                   {/* Description */}
-                  <p className={`font-inter text-xs md:text-sm leading-relaxed transition-all duration-700 ${
-                    isActive ? 'text-white/45' : 'text-white/15'
+                  <p className={`font-inter text-[11px] md:text-sm leading-relaxed transition-all duration-700 ${
+                    isActive ? 'text-white/50' : 'text-white/15'
                   }`}>
                     {regionText.description}
                   </p>
                 </div>
               </div>
 
-              {/* Right - Punchline */}
+              {/* Right - Punchline (bottom on mobile) */}
               <div
-                className={`max-w-sm text-right transition-all duration-1000 ease-out ${
+                className={`w-full md:w-auto max-w-xs md:max-w-sm text-center md:text-right transition-all duration-1000 ease-out ${
                   isActive
-                    ? 'opacity-100 translate-x-0'
-                    : 'opacity-0 translate-x-12'
+                    ? 'opacity-100 translate-y-0 md:translate-x-0'
+                    : 'opacity-0 translate-y-4 md:translate-y-0 md:translate-x-12'
                 }`}
               >
-                <p className={`font-inter text-lg md:text-xl lg:text-2xl leading-relaxed transition-all duration-700 ${
-                  isActive ? 'metallic-text-punchline' : 'text-white/10'
-                }`}>
-                  {regionText.punchline}
-                </p>
+                <div className={`${isActive ? 'bg-black/60 md:bg-transparent backdrop-blur-md md:backdrop-blur-none p-3 md:p-0 rounded-xl md:rounded-none' : ''}`}>
+                  <p className={`font-inter text-sm md:text-xl lg:text-2xl leading-relaxed transition-all duration-700 ${
+                    isActive ? 'metallic-text-punchline' : 'text-white/10'
+                  }`}>
+                    {regionText.punchline}
+                  </p>
+                </div>
               </div>
             </section>
           );
@@ -1141,40 +1203,39 @@ export default function Home() {
         {/* Footer */}
         <section
           ref={el => { sectionsRef.current[REGION_KEYS.length + 1] = el; }}
-          className="min-h-[80vh] flex flex-col justify-end pb-12"
-          style={{ paddingLeft: '40px', paddingRight: '40px' }}
+          className="min-h-[80vh] flex flex-col justify-end pb-8 md:pb-12 px-4 md:px-10"
         >
           {/* Main CTA */}
-          <div className={`text-center mb-8 transition-all duration-700 ${
+          <div className={`text-center mb-6 md:mb-8 transition-all duration-700 ${
             activeIndex === REGION_KEYS.length + 1
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
           }`}>
             {/* Title */}
-            <h2 className="font-bebas text-4xl md:text-5xl metallic-text-title-animated tracking-wide mb-4">
+            <h2 className="font-bebas text-3xl md:text-5xl metallic-text-title-animated tracking-wide mb-3 md:mb-4">
               {t.footerTitle}
             </h2>
 
             {/* Subtitle */}
-            <p className="font-inter text-white/35 text-sm mb-6 max-w-md mx-auto">
+            <p className="font-inter text-white/35 text-xs md:text-sm mb-5 md:mb-6 max-w-xs md:max-w-md mx-auto px-4 md:px-0">
               {t.footerSubtitle}
             </p>
 
             {/* Button */}
-            <button onClick={() => setOpenModal("demo")} className="metallic-button-dark px-10 py-3.5 text-base font-medium tracking-wider">
+            <button onClick={() => setOpenModal("demo")} className="metallic-button-dark px-8 md:px-10 py-3 md:py-3.5 text-sm md:text-base font-medium tracking-wider">
               <span className="metallic-text-hero">{t.nav.demo}</span>
             </button>
           </div>
 
           {/* Bottom Bar - Copyright left, Social Icons right */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-4 md:gap-0 mb-4">
             {/* Copyright - Left */}
-            <p className="font-inter text-[11px] text-white/25 tracking-wider">
+            <p className="font-inter text-[10px] md:text-[11px] text-white/25 tracking-wider">
               {t.copyright}
             </p>
 
             {/* Social Icons - Right */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
               {/* X/Twitter */}
               <a
                 href="https://x.com/BrainArts_"
