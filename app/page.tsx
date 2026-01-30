@@ -22,9 +22,15 @@ const translations = {
     // Hero
     heroTitle: "BRAINARTS",
     heroSubtitle: "Executional Semantic Graph",
-    heroTagline: "ERP'NİZİ AI-READY HALE GETİRİN",
-    heroDescription: "Mevcut ERP sistemlerinize entegre olan semantik zeka katmanı. AI Agent'ların anlayıp karar verebileceği, yaşayan bir kurumsal hafıza.",
+    heroTagline: "ERP'NİZE AKIL KATIN",
+    heroDescription: "BrainArts bir ERP değildir. Mevcut ERP'nizin (SAP, Oracle, Logo, Netsis...) üzerine kurulan bir akıl katmanıdır. AI Agent'ların anlayıp işlem yapabileceği, yaşayan bir kurumsal hafıza.",
     scrollHint: "Keşfetmek için kaydırın",
+    capabilitiesTitle: "ERP'NİZİN KAZANABİLECEĞİ YETENEKLER",
+    capabilities: [
+      { title: "Blind Calculation", desc: "Rakamları görmeden maliyet etki analizi" },
+      { title: "Karbon Ayak İzi", desc: "Ürün bazlı emisyon hesaplama" },
+      { title: "AI Sorgulama", desc: "Doğal dille veri erişimi" },
+    ],
     // Footer
     footerTitle: "GELECEĞİ ŞEKİLLENDİRİN",
     footerSubtitle: "BrainArts ile endüstriyel zekanızı bir üst seviyeye taşıyın.",
@@ -54,10 +60,10 @@ const translations = {
       },
       occipital: {
         name: "Oksipital Lob",
-        subtitle: "Analiz Gözü",
-        function: "İleri Düzey Maliyet Analizi ve Görselleştirme",
-        description: "Maliyet katmanları, trendler ve kârlılık projeksiyonları kristal netliğinde görselleşir.",
-        punchline: "Görünmeyeni görün; maliyetin her katmanındaki potansiyeli kristal netliğinde keşfedin.",
+        subtitle: "Analiz Motorları",
+        function: "Maliyet, Karbon ve Etki Analiz Motorları",
+        description: "Katmanlı maliyet analizi, karbon ayak izi hesaplama, döviz etki simülasyonu - tüm motorlar formül tabanlı ve şeffaf.",
+        punchline: "Maliyetten karbona, her hesaplama izlenebilir.",
       },
       cerebellum: {
         name: "Serebellum",
@@ -82,6 +88,8 @@ const translations = {
       title: "Hakkında",
       heroIntro: "Endüstriyel Zekanın Yeni İşletim Sistemi",
       heroDesc: "BrainArts, karmaşık endüstriyel operasyonları yönetmek ve dönüştürmek için kurgulanmış, dünyanın en gelişmiş Executional Semantic Graph (ESG) platformudur.",
+      notAnERP: "BrainArts bir ERP değildir.",
+      notAnERPDesc: "Mevcut ERP sisteminizin (SAP, Oracle, Logo, Netsis...) üzerine kurulan bir akıl katmanıdır. Sisteminizi değiştirmez, güçlendirir.",
       whatWeDo: "Geleneksel, statik ve birbirinden kopuk BOM (Ürün Ağacı) sistemlerinin ötesine geçiyoruz. Veriyi sadece saklayan bir depo değil; veriyi anlayan, ilişkilendiren ve otomatik olarak yürüten yaşayan bir graf yapısı inşa ediyoruz.",
       whyTitle: "Neden BrainArts?",
       whySubtitle: "Sıradan yazılımlar veri tutar; BrainArts ise veriyi harekete geçirir.",
@@ -89,7 +97,7 @@ const translations = {
       feature1Desc: "Veriler arasındaki anlamsal bağları kurarak, her veri noktasını çalıştırılabilir birer zeka hücresine dönüştürür.",
       feature2Title: "Formula-Based Propagation",
       feature2Desc: "Graf üzerindeki tek bir girdi değişikliğinin, tüm sistem boyunca bir sinir sinyali gibi yayılmasını ve sonuçları anlık olarak güncellemesini sağlar.",
-      feature3Title: "Ratio-Only Blind Calculation",
+      feature3Title: "Blind Calculation",
       feature3Desc: "Hassas verileri korurken, karmaşık maliyet ve oran analizlerini en yüksek güvenlik ve gizlilik standartlarında gerçekleştirir.",
       feature4Title: "Multi-Tenant Isolation",
       feature4Desc: "Her kuruma özel, izole ve siber güvenlik odaklı bir mimari sunarak endüstriyel sırlarınızı korur.",
@@ -129,9 +137,15 @@ const translations = {
     // Hero
     heroTitle: "BRAINARTS",
     heroSubtitle: "Executional Semantic Graph",
-    heroTagline: "Make Your ERP AI-Ready",
-    heroDescription: "A semantic intelligence layer that integrates with your existing ERP systems. A living corporate memory that AI Agents can understand and make decisions from.",
+    heroTagline: "ADD INTELLIGENCE TO YOUR ERP",
+    heroDescription: "BrainArts is not an ERP. It's an intelligence layer built on top of your existing ERP (SAP, Oracle, Logo, Netsis...). A living corporate memory that AI Agents can understand and act upon.",
     scrollHint: "Scroll to explore",
+    capabilitiesTitle: "CAPABILITIES YOUR ERP CAN GAIN",
+    capabilities: [
+      { title: "Blind Calculation", desc: "Cost impact analysis without seeing the numbers" },
+      { title: "Carbon Footprint", desc: "Product-based emission calculation" },
+      { title: "AI Query", desc: "Natural language data access" },
+    ],
     // Footer
     footerTitle: "SHAPE THE FUTURE",
     footerSubtitle: "Elevate your industrial intelligence with BrainArts.",
@@ -161,10 +175,10 @@ const translations = {
       },
       occipital: {
         name: "Occipital Lobe",
-        subtitle: "Analysis Eye",
-        function: "Advanced Cost Analysis & Visualization",
-        description: "Cost layers, trends, and profitability projections visualized with crystal clarity.",
-        punchline: "See the invisible; discover the potential in every layer of cost with crystal clarity.",
+        subtitle: "Analysis Engines",
+        function: "Cost, Carbon & Impact Analysis Engines",
+        description: "Layered cost analysis, carbon footprint calculation, currency impact simulation - all engines are formula-based and transparent.",
+        punchline: "From cost to carbon, every calculation is traceable.",
       },
       cerebellum: {
         name: "Cerebellum",
@@ -189,6 +203,8 @@ const translations = {
       title: "About",
       heroIntro: "The New Operating System for Industrial Intelligence",
       heroDesc: "BrainArts is the world's most advanced Executional Semantic Graph (ESG) platform, designed to manage and transform complex industrial operations.",
+      notAnERP: "BrainArts is not an ERP.",
+      notAnERPDesc: "It's an intelligence layer that sits on top of your existing ERP system (SAP, Oracle, Logo, Netsis...). It doesn't replace your system, it empowers it.",
       whatWeDo: "We go beyond traditional, static, and disconnected BOM (Bill of Materials) systems. We're building not just a repository that stores data, but a living graph structure that understands, connects, and automatically executes data.",
       whyTitle: "Why BrainArts?",
       whySubtitle: "Ordinary software stores data; BrainArts puts data into action.",
@@ -196,7 +212,7 @@ const translations = {
       feature1Desc: "By establishing semantic connections between data, it transforms every data point into an executable intelligence cell.",
       feature2Title: "Formula-Based Propagation",
       feature2Desc: "Enables a single input change on the graph to propagate like a nerve signal throughout the system and update results instantly.",
-      feature3Title: "Ratio-Only Blind Calculation",
+      feature3Title: "Blind Calculation",
       feature3Desc: "Performs complex cost and ratio analyses at the highest security and privacy standards while protecting sensitive data.",
       feature4Title: "Multi-Tenant Isolation",
       feature4Desc: "Protects your industrial secrets by providing a customized, isolated, and cybersecurity-focused architecture for each organization.",
@@ -583,25 +599,61 @@ function Modal({
   children: React.ReactNode;
   title: string;
 }) {
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      // Restore scroll position
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6"
       onClick={onClose}
+      onWheel={e => e.stopPropagation()}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
       {/* Modal Content */}
       <div
-        className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl"
+        className="relative w-full max-w-4xl max-h-[88vh] overflow-y-auto rounded-2xl bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 shadow-2xl"
         onClick={e => e.stopPropagation()}
+        onWheel={e => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
+          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
         >
           <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
@@ -609,14 +661,14 @@ function Modal({
         </button>
 
         {/* Header */}
-        <div className="px-4 md:px-10 py-6 md:py-8 border-b border-white/5">
-          <h2 className="font-bebas text-2xl md:text-4xl tracking-wide metallic-text-title-animated">
+        <div className="px-5 md:px-10 py-5 md:py-6 border-b border-white/5">
+          <h2 className="font-bebas text-2xl md:text-3xl tracking-wide metallic-text-title-animated">
             {title}
           </h2>
         </div>
 
         {/* Body */}
-        <div className="px-4 md:px-10 py-6 md:py-8">
+        <div className="px-5 md:px-10 py-5 md:py-6">
           {children}
         </div>
       </div>
@@ -629,35 +681,32 @@ function FeaturesContent({ t }: { t: typeof translations.tr }) {
   const regionKeys: RegionKey[] = ["frontal", "temporal", "parietal", "occipital", "cerebellum"];
 
   return (
-    <div className="space-y-10">
+    <div className="modal-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Intro */}
-      <div>
-        <p className="text-xs tracking-[0.3em] uppercase text-white/30 mb-3">{t.featuresModal.intro}</p>
-        <h3 className="font-bebas text-3xl md:text-4xl metallic-text-title-animated mb-4">
+      <div style={{ textAlign: 'center', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <h3 className="font-bebas text-2xl md:text-4xl metallic-text-title-animated mb-2">
           <span className="executional-shimmer">Executional</span> Semantic Graph
         </h3>
-        <p className="text-white/50 leading-relaxed text-base">
+        <p className="text-white/50 leading-relaxed text-sm" style={{ maxWidth: '32rem', margin: '0 auto', textAlign: 'center' }}>
           {t.featuresModal.esgDesc}
         </p>
       </div>
 
       {/* Features Grid */}
-      <div className="space-y-8">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         {regionKeys.map((key, i) => {
           const region = t.regions[key];
           return (
-            <div key={i} className="flex gap-6 items-start group">
-              <div className="relative">
-                <span className="font-bebas text-6xl md:text-7xl metallic-number-animated">0{i + 1}</span>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 metallic-line-animated rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
-              <div className="flex-1 pt-2">
-                <div className="flex items-center gap-4 mb-3">
-                  <h3 className="font-bebas text-2xl md:text-3xl metallic-text">{region.name}</h3>
-                  <span className="text-[10px] tracking-[0.2em] uppercase text-white/30 px-2 py-1 bg-white/5 rounded">{region.subtitle}</span>
+            <div key={i} className="group p-3.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 transition-all duration-300">
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                <span className="font-bebas text-3xl metallic-number-animated" style={{ flexShrink: 0, width: '2.5rem', textAlign: 'right' }}>0{i + 1}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <h3 className="font-bebas text-lg md:text-xl metallic-text-hero">{region.name}</h3>
+                    <span className="text-[9px] tracking-[0.1em] uppercase text-white/40">— {region.subtitle}</span>
+                  </div>
+                  <p className="text-sm text-white/50 leading-relaxed">{region.description}</p>
                 </div>
-                <p className="text-base metallic-bold mb-2">{region.function}</p>
-                <p className="text-sm text-white/45 leading-relaxed">{region.description}</p>
               </div>
             </div>
           );
@@ -665,11 +714,10 @@ function FeaturesContent({ t }: { t: typeof translations.tr }) {
       </div>
 
       {/* Summary */}
-      <div className="pt-8 border-t border-white/10">
-        <h3 className="font-bebas text-2xl metallic-text-title-animated mb-4">{t.featuresModal.summaryTitle}</h3>
-        <p className="text-white/50 leading-relaxed text-base">
+      <div style={{ paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+        <h3 className="font-bebas text-xl md:text-2xl metallic-text-title-animated mb-2">{t.featuresModal.summaryTitle}</h3>
+        <p className="text-white/50 leading-relaxed text-sm" style={{ maxWidth: '32rem', margin: '0 auto', textAlign: 'center' }}>
           {t.featuresModal.summaryDesc}
-          <span className="text-white/70"> {t.featuresModal.summaryHighlight}</span>
         </p>
       </div>
     </div>
@@ -679,92 +727,76 @@ function FeaturesContent({ t }: { t: typeof translations.tr }) {
 // About Modal Content
 function AboutContent({ t }: { t: typeof translations.tr }) {
   return (
-    <div className="space-y-10">
+    <div className="modal-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Hero Section */}
-      <div>
-        <p className="text-xs tracking-[0.3em] uppercase text-white/30 mb-3">{t.aboutModal.heroIntro}</p>
-        <h3 className="font-bebas text-3xl md:text-4xl metallic-text-title-animated mb-6">BrainArts</h3>
-        <p className="text-white/60 leading-relaxed text-base">
+      <div style={{ textAlign: 'center', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <h3 className="font-bebas text-3xl md:text-5xl metallic-text-title-animated mb-3">BrainArts</h3>
+        <p className="text-white/60 leading-relaxed text-sm" style={{ maxWidth: '32rem', margin: '0 auto', textAlign: 'center' }}>
           {t.aboutModal.heroDesc.split("Executional")[0]}
           <span className="executional-shimmer">Executional</span>
           {t.aboutModal.heroDesc.split("Executional")[1]}
         </p>
       </div>
 
-      {/* What We Do */}
-      <div>
-        <p className="text-white/50 leading-relaxed text-base mb-4">
-          {t.aboutModal.whatWeDo}
-        </p>
+      {/* Not an ERP - Important Notice */}
+      <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10" style={{ textAlign: 'center' }}>
+        <p className="font-bebas text-xl metallic-text-hero mb-2">{t.aboutModal.notAnERP}</p>
+        <p className="text-sm text-white/50 leading-relaxed" style={{ maxWidth: '30rem', margin: '0 auto', textAlign: 'center' }}>{t.aboutModal.notAnERPDesc}</p>
       </div>
 
-      {/* Why BrainArts */}
-      <div>
-        <h4 className="font-bebas text-2xl metallic-text mb-2">{t.aboutModal.whyTitle}</h4>
-        <p className="text-sm text-white/40 italic mb-6">{t.aboutModal.whySubtitle}</p>
+      {/* Why BrainArts - 4 Features Grid */}
+      <div style={{ textAlign: 'center' }}>
+        <h4 className="font-bebas text-xl md:text-2xl metallic-text-title-animated mb-3">{t.aboutModal.whyTitle}</h4>
 
-        <div className="space-y-5">
-          <div className="flex gap-4">
-            <div className="w-1 metallic-line-vertical rounded-full flex-shrink-0" />
-            <div>
-              <h5 className="text-sm font-medium mb-1">
-                <span className="executional-shimmer">Executional</span> <span className="metallic-bold">Semantic Graph</span>
-              </h5>
-              <p className="text-sm text-white/45 leading-relaxed">
-                {t.aboutModal.feature1Desc}
-              </p>
-            </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5" style={{ textAlign: 'left' }}>
+            <h5 className="text-sm font-medium mb-1.5">
+              <span className="executional-shimmer">Executional</span> <span className="metallic-text">Semantic Graph</span>
+            </h5>
+            <p className="text-xs text-white/45 leading-relaxed">
+              {t.aboutModal.feature1Desc}
+            </p>
           </div>
 
-          <div className="flex gap-4">
-            <div className="w-1 metallic-line-vertical rounded-full flex-shrink-0" />
-            <div>
-              <h5 className="text-sm font-medium metallic-bold mb-1">{t.aboutModal.feature2Title}</h5>
-              <p className="text-sm text-white/45 leading-relaxed">
-                {t.aboutModal.feature2Desc}
-              </p>
-            </div>
+          <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5" style={{ textAlign: 'left' }}>
+            <h5 className="text-sm font-medium metallic-text mb-1.5">{t.aboutModal.feature2Title}</h5>
+            <p className="text-xs text-white/45 leading-relaxed">
+              {t.aboutModal.feature2Desc}
+            </p>
           </div>
 
-          <div className="flex gap-4">
-            <div className="w-1 metallic-line-vertical rounded-full flex-shrink-0" />
-            <div>
-              <h5 className="text-sm font-medium metallic-bold mb-1">{t.aboutModal.feature3Title}</h5>
-              <p className="text-sm text-white/45 leading-relaxed">
-                {t.aboutModal.feature3Desc}
-              </p>
-            </div>
+          <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5" style={{ textAlign: 'left' }}>
+            <h5 className="text-sm font-medium metallic-text mb-1.5">{t.aboutModal.feature3Title}</h5>
+            <p className="text-xs text-white/45 leading-relaxed">
+              {t.aboutModal.feature3Desc}
+            </p>
           </div>
 
-          <div className="flex gap-4">
-            <div className="w-1 metallic-line-vertical rounded-full flex-shrink-0" />
-            <div>
-              <h5 className="text-sm font-medium metallic-bold mb-1">{t.aboutModal.feature4Title}</h5>
-              <p className="text-sm text-white/45 leading-relaxed">
-                {t.aboutModal.feature4Desc}
-              </p>
-            </div>
+          <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5" style={{ textAlign: 'left' }}>
+            <h5 className="text-sm font-medium metallic-text mb-1.5">{t.aboutModal.feature4Title}</h5>
+            <p className="text-xs text-white/45 leading-relaxed">
+              {t.aboutModal.feature4Desc}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Vision */}
-      <div className="pt-6 border-t border-white/10">
-        <h4 className="font-bebas text-2xl metallic-text mb-2">{t.aboutModal.visionTitle}</h4>
-        <p className="text-white/50 leading-relaxed text-base mb-4">
+      <div style={{ paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+        <h4 className="font-bebas text-xl metallic-text-title-animated mb-2">{t.aboutModal.visionTitle}</h4>
+        <p className="text-white/50 leading-relaxed text-sm" style={{ maxWidth: '32rem', margin: '0 auto', textAlign: 'center' }}>
           {t.aboutModal.visionDesc}
-        </p>
-        <p className="text-white/60 leading-relaxed text-base italic">
-          {t.aboutModal.visionHighlight}
         </p>
       </div>
 
       {/* Contact */}
-      <div className="pt-6 border-t border-white/10">
-        <h4 className="font-bebas text-xl metallic-text mb-3">{t.aboutModal.contactTitle}</h4>
-        <p className="text-white/40 text-sm mb-2">{t.aboutModal.contactDesc}</p>
-        <a href="mailto:brainfo@brainarts.com.tr" className="metallic-bold hover:opacity-80 transition-opacity text-sm">
-          brainfo@brainarts.com.tr
+      <div style={{ paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+        <h4 className="font-bebas text-lg metallic-text mb-2">{t.aboutModal.contactTitle}</h4>
+        <a
+          href="mailto:brainfo@brainarts.com.tr"
+          className="inline-block px-5 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-300"
+        >
+          <span className="metallic-text text-sm">brainfo@brainarts.com.tr</span>
         </a>
       </div>
     </div>
@@ -828,7 +860,7 @@ function DemoContent({ t, onClose }: { t: typeof translations.tr; onClose: () =>
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 modal-stagger">
       <div>
         <label className="block text-sm text-white/40 mb-2">{t.demoModal.nameLabel}</label>
         <input
@@ -888,6 +920,42 @@ function DemoContent({ t, onClose }: { t: typeof translations.tr; onClose: () =>
   );
 }
 
+// Simple Loading Screen Component - no random values for hydration safety
+function LoadingScreen({ onComplete }: { onComplete: () => void }) {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+      setTimeout(onComplete, 500);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <div className={`fixed inset-0 z-[200] bg-[#030303] flex flex-col items-center justify-center transition-opacity duration-500 ${!isVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      {/* Simple pulsing logo */}
+      <div className="relative">
+        <div className="w-16 h-16 mb-6 animate-pulse">
+          <img src="/logo.png" alt="BrainArts" className="w-full h-full object-contain" />
+        </div>
+      </div>
+
+      {/* Loading bar */}
+      <div className="w-48 h-0.5 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-full rounded-full metallic-loading-bar animate-loading-progress" />
+      </div>
+
+      {/* Loading text */}
+      <p className="mt-4 text-xs tracking-[0.3em] uppercase text-white/30">
+        LOADING
+      </p>
+    </div>
+  );
+}
+
+
 // Main Component
 export default function Home() {
   const [selectedRegion, setSelectedRegion] = useState<RegionKey | null>(null);
@@ -898,7 +966,35 @@ export default function Home() {
   const [lang, setLang] = useState<Lang>("tr");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const t = translations[lang];
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const totalSections = REGION_KEYS.length + 2; // hero + regions + footer
+        let nextIndex = activeIndex;
+
+        if (e.key === 'ArrowDown' && activeIndex < totalSections - 1) {
+          nextIndex = activeIndex + 1;
+        } else if (e.key === 'ArrowUp' && activeIndex > 0) {
+          nextIndex = activeIndex - 1;
+        }
+
+        if (nextIndex !== activeIndex && sectionsRef.current[nextIndex]) {
+          sectionsRef.current[nextIndex]?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeIndex]);
 
   // Detect mobile screen
   useEffect(() => {
@@ -923,6 +1019,17 @@ export default function Home() {
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
       const viewportCenter = windowHeight / 2;
+
+      // Header glassmorphism trigger
+      setIsScrolled(window.scrollY > 50);
+
+      // Scroll progress calculation
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrollHeight > 0 ? (window.scrollY / scrollHeight) * 100 : 0;
+      setScrollProgress(progress);
+
+      // Show back to top button after scrolling down
+      setShowBackToTop(window.scrollY > 500);
 
       let closestSection = 0;
       let closestDistance = Infinity;
@@ -956,8 +1063,11 @@ export default function Home() {
 
   return (
     <div className={`${bebasNeue.variable} ${inter.variable} min-h-screen bg-[#030303]`}>
+      {/* Loading Screen */}
+      {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+
       {/* 3D Canvas */}
-      <div className="fixed inset-0 z-0">
+      <div className={`fixed inset-0 z-0 transition-opacity duration-1000 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
         <Canvas
           camera={{ position: [0, 0, 8], fov: 45 }}
           gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0 }}
@@ -990,18 +1100,30 @@ export default function Home() {
       <ProgressDots activeIndex={Math.min(activeIndex, REGION_KEYS.length)} total={REGION_KEYS.length} />
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-transparent pointer-events-none" />
-        <nav className="relative flex items-center justify-between pt-6 pb-4 md:pt-8 md:pb-6 px-4 md:px-12">
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled
+          ? 'bg-black/60 backdrop-blur-xl border-b border-white/5'
+          : ''
+      }`}>
+        <div className={`absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-transparent pointer-events-none transition-opacity duration-500 ${
+          isScrolled ? 'opacity-0' : 'opacity-100'
+        }`} />
+        <nav className={`relative flex items-center justify-between px-6 md:px-16 lg:px-24 transition-all duration-500 ${
+          isScrolled ? 'pt-3 pb-3 md:pt-4 md:pb-4' : 'pt-6 pb-4 md:pt-8 md:pb-6'
+        }`}>
           <a href="#" className="flex items-center gap-2 md:gap-3">
-            <div className="w-8 h-8 md:w-11 md:h-11">
+            <div className={`transition-all duration-500 ${isScrolled ? 'w-7 h-7 md:w-9 md:h-9' : 'w-8 h-8 md:w-11 md:h-11'}`}>
               <img src="/logo.png" alt="BrainArts" className="w-full h-full object-contain drop-shadow-lg" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bebas text-lg md:text-[1.7rem] tracking-[0.2em] md:tracking-[0.3em] metallic-text-bright">
+              <span className={`font-bebas tracking-[0.2em] md:tracking-[0.3em] metallic-text-bright transition-all duration-500 ${
+                isScrolled ? 'text-base md:text-xl' : 'text-lg md:text-[1.7rem]'
+              }`}>
                 BRAINARTS
               </span>
-              <span className="font-inter text-[7px] md:text-[10px] tracking-[0.15em] md:tracking-[0.2em] uppercase text-white/40">
+              <span className={`font-inter tracking-[0.15em] md:tracking-[0.2em] uppercase text-white/40 transition-all duration-500 ${
+                isScrolled ? 'text-[6px] md:text-[8px]' : 'text-[7px] md:text-[10px]'
+              }`}>
                 Neural Intelligence
               </span>
             </div>
@@ -1062,7 +1184,29 @@ export default function Home() {
             </button>
           </div>
         )}
+
+        {/* Scroll Progress Bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/5">
+          <div
+            className="h-full bg-gradient-to-r from-white/20 via-white/40 to-white/20 transition-all duration-150"
+            style={{ width: `${scrollProgress}%` }}
+          />
+        </div>
       </header>
+
+
+      {/* Back to Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className={`fixed bottom-20 right-6 z-50 w-10 h-10 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:bg-white/10 hover:border-white/20 ${
+          showBackToTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+        aria-label="Back to top"
+      >
+        <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      </button>
 
       {/* Content */}
       <div className="relative z-20">
@@ -1071,13 +1215,14 @@ export default function Home() {
           ref={el => { sectionsRef.current[0] = el; }}
           className="min-h-screen flex flex-col"
         >
-          {/* Hero Content - Left side */}
+          {/* Hero Content */}
           <div
             className={`flex-1 flex items-center transition-all duration-700 ${
               activeIndex === 0 ? 'opacity-100' : 'opacity-0'
-            } px-4 md:px-12`}
+            }`}
+            style={{ paddingLeft: '2%' }}
           >
-            <div className="max-w-lg bg-black/40 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none rounded-xl p-4 md:p-0">
+            <div className="max-w-xl bg-black/40 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none rounded-xl p-4 md:p-0">
               {/* ESG Badge */}
               <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-white/[0.03] border border-white/10">
                 <div className="w-2 h-2 rounded-full bg-gradient-to-r from-white/40 to-white/20 animate-pulse" />
@@ -1087,12 +1232,12 @@ export default function Home() {
               </div>
 
               {/* Main Tagline */}
-              <h1 className="font-bebas text-4xl md:text-5xl lg:text-6xl tracking-wide mb-4 metallic-text-title-animated">
+              <h1 className="font-bebas text-4xl md:text-5xl lg:text-6xl tracking-wide mb-6 metallic-text-title-animated">
                 {t.heroTagline}
               </h1>
 
               {/* Description */}
-              <p className="font-inter text-sm md:text-base text-white/50 leading-relaxed mb-8 max-w-md">
+              <p className="font-inter text-sm md:text-base text-white/50 leading-relaxed max-w-md">
                 {t.heroDescription}
               </p>
 
@@ -1123,7 +1268,8 @@ export default function Home() {
             <section
               key={region}
               ref={el => { sectionsRef.current[index + 1] = el; }}
-              className="min-h-screen flex flex-col md:flex-row items-center justify-center md:justify-between px-4 md:px-10 py-8 md:py-0"
+              className="min-h-screen flex flex-col md:flex-row items-center justify-center md:justify-between py-8 md:py-0"
+              style={{ paddingLeft: '2%', paddingRight: '2%' }}
             >
               {/* Left - Function Card */}
               <div
@@ -1203,7 +1349,7 @@ export default function Home() {
         {/* Footer */}
         <section
           ref={el => { sectionsRef.current[REGION_KEYS.length + 1] = el; }}
-          className="min-h-[80vh] flex flex-col justify-end pb-8 md:pb-12 px-4 md:px-10"
+          className="min-h-[80vh] flex flex-col justify-end pb-8 md:pb-12 px-6 md:px-16 lg:px-24"
         >
           {/* Main CTA */}
           <div className={`text-center mb-6 md:mb-8 transition-all duration-700 ${
@@ -1808,6 +1954,89 @@ export default function Home() {
         .overflow-y-auto::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.2);
         }
+
+        /* Loading bar - metallic gradient */
+        .metallic-loading-bar {
+          background: linear-gradient(
+            90deg,
+            #404040 0%,
+            #707070 25%,
+            #c0c0c0 50%,
+            #707070 75%,
+            #404040 100%
+          );
+          background-size: 200% 100%;
+          animation: loading-shimmer 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loading-shimmer {
+          0% { background-position: 200% center; }
+          100% { background-position: -200% center; }
+        }
+
+        .animate-loading-progress {
+          animation: loading-progress 1.5s ease-out forwards;
+        }
+
+        @keyframes loading-progress {
+          0% { width: 0%; }
+          100% { width: 100%; }
+        }
+
+        /* Loading brain icon fill */
+        .metallic-fill-animated {
+          fill: url(#loading-gradient);
+          animation: fill-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes fill-pulse {
+          0%, 100% { fill: #505050; }
+          50% { fill: #909090; }
+        }
+
+        /* Matrix fall animation */
+        .animate-matrix-fall {
+          animation: matrix-fall linear infinite;
+        }
+
+        @keyframes matrix-fall {
+          0% {
+            transform: translateY(-100%);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh);
+            opacity: 0.3;
+          }
+        }
+
+        /* Staggered modal entrance */
+        .modal-stagger > * {
+          opacity: 0;
+          transform: translateY(10px);
+          animation: stagger-in 0.4s ease-out forwards;
+        }
+
+        .modal-stagger > *:nth-child(1) { animation-delay: 0.1s; }
+        .modal-stagger > *:nth-child(2) { animation-delay: 0.2s; }
+        .modal-stagger > *:nth-child(3) { animation-delay: 0.3s; }
+        .modal-stagger > *:nth-child(4) { animation-delay: 0.4s; }
+        .modal-stagger > *:nth-child(5) { animation-delay: 0.5s; }
+        .modal-stagger > *:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes stagger-in {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Grain/Noise Overlay */
+        .grain-overlay {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          background-repeat: repeat;
+        }
+
       `}</style>
     </div>
   );
